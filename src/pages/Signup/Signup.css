@@ -1,0 +1,345 @@
+@import url("https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap");
+
+/* Layout */
+.login-layout {
+  display: flex;
+  min-height: 100vh;
+  background: #b9727287;
+  font-family: "Poppins", sans-serif;
+}
+
+/* LEFT PANEL */
+.branding-panel {
+  flex: 1;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+.branding-content {
+  max-width: 420px;
+}
+.branding-content h1 {
+  font-size: 2.6rem;
+  font-weight: 700;
+  margin-bottom: 14px;
+}
+.branding-content p {
+  font-size: 1rem;
+  opacity: 0.9;
+}
+
+/* RIGHT PANEL */
+.form-panel {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 30px;
+}
+
+/* Glass Card */
+.glass-card {
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 22px;
+  padding: 28px 38px 42px;
+  backdrop-filter: blur(14px);
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.35);
+  width: 420px;
+  max-width: 100%;
+  text-align: center;
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+/* Logo */
+/* Glow Pulse Animation (same as Login) */
+@keyframes glowPulse {
+  0% {
+    box-shadow: 0 0 18px rgba(255, 200, 200, 0.4);
+  }
+  50% {
+    box-shadow: 0 0 30px rgba(255, 200, 200, 0.7);
+  }
+  100% {
+    box-shadow: 0 0 18px rgba(255, 200, 200, 0.4);
+  }
+}
+
+/* Apply Glow to Logo Wrap */
+
+.logo-wrap {
+  width: 86px;
+  height: 86px;
+  margin: 0 auto 4px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.logo {
+  width: 56px;
+}
+
+/* Titles */
+.title {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #000;
+}
+.subtitle {
+  font-size: 0.95rem;
+  opacity: 0.8;
+  margin-bottom: 24px;
+  color: #000;
+}
+
+/* Floating Inputs */
+.field {
+  position: relative;
+  margin-bottom: 18px;
+  margin-top: 12px;
+  margin-left: 25px;
+  margin-right: 25px;
+}
+.field input {
+  width: 100%;
+  padding: 14px;
+  border-radius: 12px;
+  border: none;
+  background: rgba(255, 255, 255, 0.95);
+}
+.field label {
+  position: absolute;
+  left: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #555;
+  transition: 0.3s;
+}
+.field input:focus + label,
+.field input:not(:placeholder-shown) + label {
+  top: -6px;
+  font-size: 0.75rem;
+  background: rgba(139, 47, 58, 0.9);
+  padding: 2px 6px;
+  border-radius: 6px;
+  color: #fff;
+}
+
+/* Divider */
+.divider {
+  display: flex;
+  align-items: center;
+  margin: 18px 0 12px;
+}
+.divider::before,
+.divider::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: rgba(15, 14, 14, 0.3);
+}
+.divider span {
+  margin: 0 10px;
+}
+
+/* Universal Primary Buttons (ALL MAIN ACTIONS) */
+/* Buttons (NEXT + PRIMARY) */
+.btn-primary {
+  flex: 1;
+  padding: 10px;
+  width: 100%;
+  background: linear-gradient(135deg, #9a4c55, #b52f3a);
+  border: none;
+  border-radius: 12px;
+  color: #fff;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 6px 18px rgba(160, 42, 56, 0.45);
+  transition: all 0.25s ease;
+}
+
+.extra-top-padding {
+  margin-top: 10px;
+  padding: 10px;
+}
+
+.btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 28px rgba(160, 42, 56, 0.6);
+}
+
+/* Button Row Spacing */
+.btn-row {
+  display: flex;
+  gap: 14px;
+  margin-top: 14px;
+}
+
+/* BACK Button — Same Style as NEXT */
+.secondary-btn {
+  flex: 1;
+  padding: 10px;
+  border-radius: 12px;
+  border: none; /* remove border difference */
+  background: linear-gradient(135deg, #9a4c55, #b52f3a);
+  color: #fff;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 6px 18px rgba(160, 42, 56, 0.45);
+  transition: all 0.25s ease;
+}
+
+.secondary-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 28px rgba(160, 42, 56, 0.6);
+}
+
+/* Back Arrow Button (top icon) */
+.back-btn {
+  background: transparent;
+  border: none;
+  font-size: 1.1rem;
+  cursor: pointer;
+  color: #000;
+}
+
+.google-btn {
+  display: flex;
+  align-items: center;
+  margin-top: 14px;
+  justify-content: center;
+  gap: 10px;
+  background: linear-gradient(135deg, #111111, #2a2a2a);
+  color: #fff;
+  border: none;
+  font-weight: 600;
+}
+
+/* Google logo size */
+.google-icon {
+  width: 18px;
+  height: 18px;
+}
+
+/* Message */
+.message {
+  margin-top: 12px;
+  background: rgba(0, 0, 0, 0.25);
+  padding: 10px;
+  border-radius: 10px;
+}
+
+/* Mobile */
+@media (max-width: 768px) {
+  .branding-panel {
+    display: none;
+  }
+}
+
+a {
+  color: #242c57;
+}
+
+/* ================= MOBILE OPTIMIZATION ONLY ================= */
+@media (max-width: 768px) {
+  /* Reduce outer padding */
+  .form-panel {
+    padding: 12px;
+  }
+
+  /* Make card compact */
+  .glass-card {
+    width: 100%;
+    padding: 18px 16px 20px;
+    border-radius: 18px;
+  }
+
+  /* Reduce logo spacing */
+  .logo-wrap {
+    width: 68px;
+    height: 68px;
+    margin-bottom: 2px;
+  }
+
+  .logo {
+    width: 46px;
+  }
+
+  /* Reduce title size */
+  .title {
+    font-size: 1.6rem;
+  }
+
+  .subtitle {
+    margin-bottom: 14px;
+  }
+
+  /* Reduce input height */
+  .field input {
+    padding: 11px;
+    border-radius: 10px;
+  }
+
+  /* Reduce button height */
+
+  /* Reduce button row gap */
+  .btn-row {
+    gap: 10px;
+    margin-top: 10px;
+  }
+
+  /* Reduce divider spacing */
+  .divider {
+    margin: 12px 0 10px;
+  }
+
+  /* Reduce message box padding */
+  .message {
+    padding: 8px;
+    font-size: 0.85rem;
+  }
+
+  /* Reduce link spacing */
+  .links {
+    margin-top: 8px;
+    font-size: 0.9rem;
+  }
+}
+
+/******** MOBILE BUTTON CENTER + PADDING FIX ********/
+@media (max-width: 768px) {
+  /* Create Account & Login button */
+  button.btn-primary.extra-top-padding {
+    width: 100% !important;
+    padding: 16px 18px !important;
+    margin-top: 14px !important;
+    text-align: center;
+    font-size: 0.95rem;
+  }
+
+  /* Google Button */
+  button.btn-primary.google-btn {
+    width: 100% !important;
+    padding: 16px 18px !important;
+    margin-top: 14px !important;
+    display: flex !important;
+    justify-content: center !important;
+    align-items: center !important;
+    gap: 10px !important;
+    border-radius: 14px !important;
+    text-align: center !important;
+    font-size: 0.95rem;
+  }
+
+  /* Google icon spacing */
+  .google-icon {
+    width: 18px;
+    height: 18px;
+    margin-right: 6px !important;
+  }
+}
