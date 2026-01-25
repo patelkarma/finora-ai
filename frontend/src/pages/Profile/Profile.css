@@ -1,0 +1,20 @@
+.profile {
+  max-width: 600px;
+  margin: 100px auto; /* 🔥 THIS CENTERS IT */
+  padding: 20px;
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+h1 {
+  color: #000000 !important;
+  margin-bottom: 10px;
+  text-align: center;
+}
+
+@media (max-width: 768px) {
+  .profile {
+    padding: 15px;
+  }
+}

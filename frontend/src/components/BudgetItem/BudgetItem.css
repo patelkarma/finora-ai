@@ -1,0 +1,51 @@
+.budget-item {
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  margin-bottom: 12px;
+  border: 1px solid #e0e0e0;
+}
+
+.budget-item:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.08);
+}
+
+.card-title {
+  color: #007bff;
+  font-weight: 600;
+}
+
+/* Debug progress wrapper - guaranteed visible */
+.debug-progress-wrapper {
+  height: 18px;
+  width: 100%;
+  background: #f0f0f0;
+  border-radius: 6px;
+  overflow: hidden;
+  border: 1px solid #ddd;
+  position: relative;
+}
+
+/* Inner bar */
+.debug-progress-bar {
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding-right: 6px;
+  box-sizing: border-box;
+  color: #111;
+  font-weight: 600;
+  font-size: 12px;
+}
+
+/* ensure text inside the bar is readable even on dark color */
+.debug-progress-text {
+  color: rgba(0, 0, 0, 0.8);
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.2);
+}
+
+/* Buttons and layout */
+.btn-sm {
+  padding: 6px 12px;
+  font-size: 0.8rem;
+}

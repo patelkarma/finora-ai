@@ -1,0 +1,22 @@
+.transactions {
+  padding-top: 50px;
+  margin-left: 10px;
+  text-align: center;
+}
+
+h1 {
+  color: #000000;
+  margin-bottom: 10px;
+}
+
+label {
+  font-family: "Times New Roman", Times, serif;
+  font-size: 22px;
+  font-weight: 200;
+}
+
+@media (max-width: 768px) {
+  .transactions {
+    padding: 15px;
+  }
+}
