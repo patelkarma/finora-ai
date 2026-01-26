@@ -1,0 +1,271 @@
+/* Overall split layout */
+.login-layout {
+  display: flex;
+  min-height: 100vh;
+  background: #b9727287;
+  font-family: "Poppins", sans-serif;
+}
+
+/* LEFT PANEL */
+.branding-panel {
+  flex: 1;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+.branding-content {
+  max-width: 420px;
+}
+.branding-content h1 {
+  font-size: 2.6rem;
+  font-weight: 700;
+  margin-bottom: 14px;
+  letter-spacing: 0.5px;
+}
+.branding-content p {
+  font-size: 1rem;
+  opacity: 0.9;
+  line-height: 1.6;
+}
+
+/* RIGHT PANEL */
+.form-panel {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 30px;
+}
+
+/* Card animation */
+.animated-card {
+  animation: fadeUp 0.6s ease forwards;
+}
+@keyframes fadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Glass Card */
+.glass-card {
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 22px;
+  padding: 42px 38px;
+  backdrop-filter: blur(14px);
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.35);
+  width: 420px;
+  max-width: 100%;
+  text-align: center;
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+/* Logo branding */
+.logo-wrap {
+  width: 100px;
+  height: 100px;
+  margin: 0 auto 12px;
+  border-radius: 50%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  /* ❌ removed background */
+  background: transparent;
+}
+
+@keyframes glowPulse {
+  0% {
+    box-shadow: 0 0 18px rgba(255, 200, 200, 0.4);
+  }
+  50% {
+    box-shadow: 0 0 30px rgba(255, 200, 200, 0.7);
+  }
+  100% {
+    box-shadow: 0 0 18px rgba(255, 200, 200, 0.4);
+  }
+}
+.logo {
+  width: 72px;
+  border-radius: 50%;
+  height: auto;
+  background: transparent;
+}
+
+/* Typography */
+.title {
+  font-size: 2rem;
+  font-weight: 700;
+  margin-bottom: 6px;
+  letter-spacing: 0.5px;
+}
+.subtitle {
+  font-size: 1rem;
+  opacity: 0.8;
+  margin-bottom: 24px;
+}
+
+/* Floating fields */
+.field {
+  position: relative;
+  margin-bottom: 18px;
+}
+.field input {
+  width: 100%;
+  padding: 14px;
+  border-radius: 12px;
+  border: none;
+  outline: none;
+  font-size: 1rem;
+  background: rgba(255, 255, 255, 0.95);
+  color: #111;
+  transition: 0.25s;
+}
+.field label {
+  position: absolute;
+  left: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 0.9rem;
+  color: #555;
+  pointer-events: none;
+  transition: 0.3s ease;
+}
+.field input:focus + label,
+.field input:not(:placeholder-shown) + label {
+  top: -6px;
+  font-size: 0.75rem;
+  background: rgba(139, 47, 58, 0.9);
+  padding: 2px 6px;
+  border-radius: 6px;
+  color: #fff;
+}
+.field input:focus {
+  box-shadow: 0 0 0 3px rgba(160, 42, 56, 0.35);
+}
+
+/* Row */
+.row-between {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+.remember {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.9rem;
+  white-space: nowrap;
+  color: #000;
+}
+
+/* LEFT PANEL IMAGE BLOCK */
+.branding-image {
+  width: 100%;
+  max-width: 420px;
+  border-radius: 20px;
+  margin-bottom: 22px;
+  box-shadow: 0 14px 40px rgba(0, 0, 0, 0.35);
+  object-fit: cover;
+}
+
+.remember input[type="checkbox"] {
+  margin: 0;
+}
+.linklike {
+  color: #000; /* black */
+  font-size: 0.9rem;
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.linklike:hover {
+  text-decoration: underline;
+}
+
+/* Button */
+.btn-primary {
+  padding: 12px;
+  background: linear-gradient(135deg, #8b2f3a, #6e1f26);
+  border: none;
+  border-radius: 12px;
+  color: #fff;
+  font-size: 1rem;
+  cursor: pointer;
+  width: 100%;
+  box-shadow: 0 10px 25px rgba(160, 42, 56, 0.45);
+  transition: all 0.25s ease;
+}
+.btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 15px 35px rgba(160, 42, 56, 0.6);
+}
+.btn-primary:active {
+  transform: translateY(0);
+}
+
+/* Pulse */
+.pulse {
+  animation: pulse 2s infinite;
+}
+@keyframes pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(160, 42, 56, 0.5);
+  }
+  70% {
+    box-shadow: 0 0 0 12px rgba(160, 42, 56, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(160, 42, 56, 0);
+  }
+}
+
+/* Divider */
+.divider {
+  display: flex;
+  align-items: center;
+  margin: 18px 0 12px;
+  color: #000; /* black */
+  font-size: 0.85rem;
+}
+
+.divider::before,
+.divider::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: rgba(255, 255, 255, 0.3);
+}
+.divider span {
+  margin: 0 10px;
+}
+
+/* Message */
+.message {
+  margin-top: 12px;
+  background: rgba(0, 0, 0, 0.25);
+  padding: 10px;
+  border-radius: 10px;
+}
+
+/* Mobile */
+@media (max-width: 768px) {
+  .login-layout {
+    flex-direction: column;
+  }
+  .branding-panel {
+    display: none;
+  }
+}

@@ -1,0 +1,34 @@
+.transaction-item:hover {
+  background-color: #f8f9fa;
+  transition: background-color 0.3s ease;
+}
+
+.badge {
+  font-size: 0.75rem;
+  padding: 4px 8px;
+}
+
+.btn-sm {
+  padding: 4px 8px;
+  font-size: 0.75rem;
+}
+
+.btn-outline-primary:hover {
+  background-color: #007bff;
+  border-color: #007bff;
+}
+
+.btn-outline-danger:hover {
+  background-color: #dc3545;
+  border-color: #dc3545;
+}
+
+@media (max-width: 768px) {
+  .transaction-item td {
+    padding: 8px 4px;
+  }
+  .btn-sm {
+    padding: 2px 4px;
+    font-size: 0.7rem;
+  }
+}

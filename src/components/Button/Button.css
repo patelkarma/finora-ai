@@ -1,0 +1,64 @@
+/* =========================
+   GLOBAL BUTTON STYLES
+   ========================= */
+
+/* Base button reset (safe) */
+button,
+.btn {
+  border-radius: 8px;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+  transition: all 0.25s ease;
+}
+
+/* Primary buttons (Add, Save, Submit, etc.) */
+.btn-primary,
+.add-budget-btn,
+.primary-btn {
+  width: auto !important; /* 🔑 stops full width */
+  padding: 10px 70px !important; /* 🔑 shorter from sides */
+  min-width: 180px; /* consistent look */
+}
+
+/* Secondary buttons */
+.btn-secondary,
+.secondary-btn {
+  width: auto !important;
+  padding: 9px 32px !important;
+  min-width: 160px;
+}
+
+/* Google / Social buttons */
+.social-btn {
+  width: auto !important;
+  padding: 12px 34px !important;
+  min-width: 220px;
+}
+
+/* Button hover effect */
+button:hover,
+.btn:hover {
+  transform: translateY(-1px);
+  opacity: 0.95;
+}
+
+/* Disabled buttons */
+button:disabled,
+.btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* Mobile responsiveness */
+@media (max-width: 768px) {
+  .btn-primary,
+  .add-budget-btn,
+  .primary-btn,
+  .btn-secondary,
+  .secondary-btn,
+  .social-btn {
+    width: 100%;
+    padding: 12px 0 !important;
+  }
+}

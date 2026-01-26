@@ -1,0 +1,37 @@
+.transaction-list {
+  margin-top: 2px;
+}
+
+.table {
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.table th {
+  background-color: #942a5bc4;
+  color: #fff;
+  font-weight: 600;
+  border: none;
+}
+
+.table td {
+  vertical-align: middle;
+}
+
+.no-data {
+  text-align: center;
+  padding: 40px;
+  color: #6c757d;
+  font-style: italic;
+}
+
+@media (max-width: 768px) {
+  .table {
+    font-size: 0.875rem;
+  }
+  .table th,
+  .table td {
+    padding: 8px;
+  }
+}
