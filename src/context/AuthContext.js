@@ -1,4 +1,4 @@
-import React, { createContext, useState, useEffect } from "react";
+import React, { createContext, useState, useEffect, useCallback } from "react";
 import api from "../services/api";
 
 export const AuthContext = createContext({
@@ -6,39 +6,17 @@ export const AuthContext = createContext({
   login: () => { },
   loginWithToken: () => { },
   logout: () => { },
+  updateUser: () => { },
 });
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
 
-  // Load saved login on mount; if token exists but no user, try to load user
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  useEffect(() => {
-    const token = localStorage.getItem("token");
-    const userJson = localStorage.getItem("user");
-
-    if (userJson) {
-      try {
-        setUser(JSON.parse(userJson));
-        return;
-      } catch {
-        // fallthrough
-      }
-    }
-
-    // if token exists but no user stored, try to load user from backend
-    if (token && !userJson) {
-      loginWithToken(token).catch((e) => {
-        console.warn("Failed to restore session from token:", e);
-      });
-    }
-  }, []); // run once
-
+  // Save updated user
   const updateUser = (updatedUser) => {
     localStorage.setItem("user", JSON.stringify(updatedUser));
     setUser(updatedUser);
   };
-
 
   // Regular login (email/password)
   const login = (userObj, token) => {
@@ -51,15 +29,12 @@ export const AuthProvider = ({ children }) => {
   };
 
   // OAuth login (token only)
-  // returns a promise so callers can await it
-  const loginWithToken = async (token) => {
+  const loginWithToken = useCallback(async (token) => {
     if (!token) throw new Error("No token provided");
 
     try {
-      // persist token first
       localStorage.setItem("token", token);
 
-      // api baseURL already includes "/api"
       const res = await api.get("/auth/me", {
         headers: { Authorization: `Bearer ${token}` },
       });
@@ -68,16 +43,16 @@ export const AuthProvider = ({ children }) => {
 
       localStorage.setItem("user", JSON.stringify(userData));
       setUser(userData);
-      return userData;
 
+      return userData;
     } catch (err) {
       console.error("Failed to load user profile:", err);
-      logout(); // ⬅️ IMPORTANT
+      logout();
       throw err;
     }
-  };
+  }, []);
 
-
+  // Logout
   const logout = () => {
     localStorage.removeItem("token");
     localStorage.removeItem("user");
@@ -86,10 +61,30 @@ export const AuthProvider = ({ children }) => {
     window.location.href = "/login";
   };
 
+  // Restore login session on mount
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    const userJson = localStorage.getItem("user");
+
+    if (userJson) {
+      try {
+        setUser(JSON.parse(userJson));
+        return;
+      } catch {
+        localStorage.removeItem("user");
+      }
+    }
+
+    if (token && !userJson) {
+      loginWithToken(token).catch((e) => {
+        console.warn("Failed to restore session from token:", e);
+      });
+    }
+  }, [loginWithToken]);
+
   return (
     <AuthContext.Provider value={{ user, login, loginWithToken, logout, updateUser }}>
       {children}
     </AuthContext.Provider>
-
   );
 };

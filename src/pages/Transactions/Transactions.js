@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useContext } from 'react';
+import React, { useEffect, useState, useContext, useCallback } from 'react';
 import { AuthContext } from '../../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import transactionService from '../../services/transactionService';
@@ -11,7 +11,7 @@ import Alert from '../../components/Alert/Alert';
 import './Transactions.css';
 
 const Transactions = () => {
-  const { user, loading } = useContext(AuthContext); // Add loading
+  const { user, loading } = useContext(AuthContext);
   const navigate = useNavigate();
   const [transactions, setTransactions] = useState([]);
   const [modalOpen, setModalOpen] = useState(false);
@@ -21,23 +21,15 @@ const Transactions = () => {
     amount: '',
     category: '',
     transactionDate: new Date().toISOString().split('T')[0],
-    type: 'expense', // ✅ default
+    type: 'expense',
   });
   const [loadingTransactions, setLoadingTransactions] = useState(true);
   const [error, setError] = useState(null);
 
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  useEffect(() => {
-    if (!loading && !user) {
-      navigate('/login'); // Redirect if not logged in
-      return;
-    }
-    if (user) {
-      fetchTransactions();
-    }
-  }, [user, loading, navigate]);
+  // ✅ FIXED: stable function
+  const fetchTransactions = useCallback(async () => {
+    if (!user) return;
 
-  const fetchTransactions = async () => {
     try {
       const data = await transactionService.getAllTransactions(user.id);
       setTransactions(data);
@@ -46,7 +38,19 @@ const Transactions = () => {
     } finally {
       setLoadingTransactions(false);
     }
-  };
+  }, [user]);
+
+  // ✅ Clean useEffect
+  useEffect(() => {
+    if (!loading && !user) {
+      navigate('/login');
+      return;
+    }
+
+    if (user) {
+      fetchTransactions();
+    }
+  }, [user, loading, navigate, fetchTransactions]);
 
   const handleAdd = () => {
     setEditing(null);
@@ -55,11 +59,10 @@ const Transactions = () => {
       amount: '',
       category: '',
       transactionDate: new Date().toISOString().split('T')[0],
-      type: 'expense', // ✅ ADD THIS
+      type: 'expense',
     });
     setModalOpen(true);
   };
-
 
   const handleEdit = (transaction) => {
     setEditing(transaction);
@@ -68,11 +71,10 @@ const Transactions = () => {
       amount: Math.abs(transaction.amount),
       category: transaction.category,
       transactionDate: transaction.transactionDate,
-      type: transaction.type || 'expense', // ✅ ADD THIS
+      type: transaction.type || 'expense',
     });
     setModalOpen(true);
   };
-
 
   const handleDelete = async (id) => {
     try {
@@ -87,10 +89,10 @@ const Transactions = () => {
     try {
       const transactionData = {
         description: form.description,
-        amount: Math.abs(parseFloat(form.amount)), // ✅ always positive
+        amount: Math.abs(parseFloat(form.amount)),
         category: form.category,
         transactionDate: form.transactionDate,
-        type: form.type, // ✅ dynamic
+        type: form.type,
       };
 
       if (editing) {
@@ -106,7 +108,6 @@ const Transactions = () => {
     }
   };
 
-
   if (loading || loadingTransactions) return <Loader message="Loading transactions..." />;
   if (error) return <Alert type="danger" message={error} />;
 
@@ -114,8 +115,18 @@ const Transactions = () => {
     <div className="transactions">
       <h1>Transactions</h1>
       <Button onClick={handleAdd} className="mb-3">Add Transaction</Button>
-      <TransactionList transactions={transactions} onEdit={handleEdit} onDelete={handleDelete} />
-      <Modal isOpen={modalOpen} title={editing ? 'Edit Transaction' : 'Add Transaction'} onClose={() => setModalOpen(false)}>
+
+      <TransactionList
+        transactions={transactions}
+        onEdit={handleEdit}
+        onDelete={handleDelete}
+      />
+
+      <Modal
+        isOpen={modalOpen}
+        title={editing ? 'Edit Transaction' : 'Add Transaction'}
+        onClose={() => setModalOpen(false)}
+      >
         <FormInput
           label="Description"
           name="description"
@@ -124,6 +135,7 @@ const Transactions = () => {
           placeholder="Enter description"
           required
         />
+
         <FormInput
           label="Amount"
           type="number"
@@ -154,6 +166,7 @@ const Transactions = () => {
           placeholder="Enter category"
           required
         />
+
         <FormInput
           label="Date"
           type="date"
@@ -162,6 +175,7 @@ const Transactions = () => {
           onChange={(e) => setForm({ ...form, transactionDate: e.target.value })}
           required
         />
+
         <Button onClick={handleSave} variant="success">Save</Button>
       </Modal>
     </div>

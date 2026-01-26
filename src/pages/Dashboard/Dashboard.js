@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useContext } from 'react';
+import React, { useEffect, useState, useContext, useCallback } from 'react';
 import { AuthContext } from '../../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import transactionService from '../../services/transactionService';
@@ -8,7 +8,7 @@ import Loader from '../../components/Loader/Loader';
 import Alert from '../../components/Alert/Alert';
 import FormInput from '../../components/formInput/formInput';
 import Button from '../../components/Button/Button';
-import Modal from '../../components/Modal/Modal'; // ✅ Added
+import Modal from '../../components/Modal/Modal';
 import './Dashboard.css';
 
 const Dashboard = () => {
@@ -20,27 +20,19 @@ const Dashboard = () => {
   const [incomeEntered, setIncomeEntered] = useState(false);
   const [incomeForm, setIncomeForm] = useState({ amount: '', category: 'Salary', transactionDate: new Date().toISOString().split('T')[0] });
 
-  // ✅ Added for edit modal
   const [modalOpen, setModalOpen] = useState(false);
   const [editing, setEditing] = useState(null);
   const [form, setForm] = useState({ description: '', amount: '', category: '', transactionDate: new Date().toISOString().split('T')[0] });
 
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  useEffect(() => {
-    if (!loading && !user) {
-      navigate('/login');
-      return;
-    }
-    if (user) {
-      checkIncome();
-    }
-  }, [user, loading, navigate]);
+  // ✅ FIXED: Wrapped in useCallback to stabilize function
+  const checkIncome = useCallback(async () => {
+    if (!user) return;
 
-  const checkIncome = async () => {
     try {
       const data = await transactionService.getRecentTransactions(user.id);
       const hasIncome = data.some(t => t.type === 'income');
       setIncomeEntered(hasIncome);
+
       if (hasIncome) {
         const transactionsWithSign = data.map(t => ({
           ...t,
@@ -53,7 +45,18 @@ const Dashboard = () => {
     } finally {
       setLoadingTransactions(false);
     }
-  };
+  }, [user]);
+
+  // ✅ Clean useEffect — no ESLint warnings now
+  useEffect(() => {
+    if (!loading && !user) {
+      navigate('/login');
+      return;
+    }
+    if (user) {
+      checkIncome();
+    }
+  }, [user, loading, navigate, checkIncome]);
 
   const handleIncomeSave = async () => {
     try {
@@ -72,7 +75,6 @@ const Dashboard = () => {
     }
   };
 
-  // ✅ Modified handleEdit to open modal with data
   const handleEdit = (transaction) => {
     setEditing(transaction);
     setForm({
@@ -93,7 +95,6 @@ const Dashboard = () => {
     }
   };
 
-  // ✅ Added save handler for editing
   const handleSave = async () => {
     try {
       const transactionData = {
@@ -101,11 +102,12 @@ const Dashboard = () => {
         amount: parseFloat(form.amount),
         category: form.category,
         transactionDate: form.transactionDate,
-        type: editing.type || 'expense', // keep same type
+        type: editing.type || 'expense',
       };
+
       await transactionService.updateTransaction(editing.id, transactionData);
       setModalOpen(false);
-      checkIncome(); // reload updated data
+      checkIncome();
     } catch (err) {
       setError('Failed to save transaction.');
     }
@@ -120,6 +122,7 @@ const Dashboard = () => {
         <div className="income-card">
           <h3>Enter Your Monthly Income</h3>
           <p>To get started, please enter your income. This helps us provide accurate insights.</p>
+
           <FormInput
             label="Income Amount"
             type="number"
@@ -129,6 +132,7 @@ const Dashboard = () => {
             placeholder="Enter amount"
             required
           />
+
           <FormInput
             label="Category"
             name="category"
@@ -137,6 +141,7 @@ const Dashboard = () => {
             placeholder="e.g., Salary"
             required
           />
+
           <FormInput
             label="Date"
             type="date"
@@ -145,6 +150,7 @@ const Dashboard = () => {
             onChange={(e) => setIncomeForm({ ...incomeForm, transactionDate: e.target.value })}
             required
           />
+
           <Button onClick={handleIncomeSave} variant="primary">Save Income</Button>
         </div>
       </div>
@@ -173,41 +179,11 @@ const Dashboard = () => {
         </div>
       </div>
 
-      {/* ✅ Added edit modal */}
       <Modal isOpen={modalOpen} title="Edit Transaction" onClose={() => setModalOpen(false)}>
-        <FormInput
-          label="Description"
-          name="description"
-          value={form.description}
-          onChange={(e) => setForm({ ...form, description: e.target.value })}
-          placeholder="Enter description"
-          required
-        />
-        <FormInput
-          label="Amount"
-          type="number"
-          name="amount"
-          value={form.amount}
-          onChange={(e) => setForm({ ...form, amount: e.target.value })}
-          placeholder="Enter amount"
-          required
-        />
-        <FormInput
-          label="Category"
-          name="category"
-          value={form.category}
-          onChange={(e) => setForm({ ...form, category: e.target.value })}
-          placeholder="Enter category"
-          required
-        />
-        <FormInput
-          label="Date"
-          type="date"
-          name="transactionDate"
-          value={form.transactionDate}
-          onChange={(e) => setForm({ ...form, transactionDate: e.target.value })}
-          required
-        />
+        <FormInput label="Description" name="description" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} required />
+        <FormInput label="Amount" type="number" name="amount" value={form.amount} onChange={(e) => setForm({ ...form, amount: e.target.value })} required />
+        <FormInput label="Category" name="category" value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })} required />
+        <FormInput label="Date" type="date" name="transactionDate" value={form.transactionDate} onChange={(e) => setForm({ ...form, transactionDate: e.target.value })} required />
         <Button onClick={handleSave} variant="success">Save</Button>
       </Modal>
     </div>

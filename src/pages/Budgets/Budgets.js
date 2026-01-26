@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useContext } from 'react';
+import React, { useEffect, useState, useContext, useCallback } from 'react';
 import { AuthContext } from '../../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import budgetService from '../../services/budgetService';
@@ -11,7 +11,7 @@ import Alert from '../../components/Alert/Alert';
 import './Budgets.css';
 
 const Budgets = () => {
-  const { user, loading } = useContext(AuthContext); // Add loading
+  const { user, loading } = useContext(AuthContext);
   const navigate = useNavigate();
   const [budgets, setBudgets] = useState([]);
   const [modalOpen, setModalOpen] = useState(false);
@@ -20,29 +20,31 @@ const Budgets = () => {
   const [loadingBudgets, setLoadingBudgets] = useState(true);
   const [error, setError] = useState(null);
 
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  useEffect(() => {
-    if (!loading && !user) {
-      navigate('/login'); // Redirect if not logged in
-      return;
-    }
-    if (user) {
-      fetchBudgets();
-    }
-  }, [user, loading, navigate]);
+  // ✅ FIXED: stable function
+  const fetchBudgets = useCallback(async () => {
+    if (!user) return;
 
-  const fetchBudgets = async () => {
     try {
       const data = await budgetService.getAllBudgets(user.id);
       setBudgets(data);
-      console.log('[Budgets] fetched budgets:', data); // <-- add this line
+      console.log('[Budgets] fetched budgets:', data);
     } catch (err) {
       setError('Failed to load budgets.');
     } finally {
       setLoadingBudgets(false);
     }
-  };
+  }, [user]);
 
+  // ✅ Clean useEffect
+  useEffect(() => {
+    if (!loading && !user) {
+      navigate('/login');
+      return;
+    }
+    if (user) {
+      fetchBudgets();
+    }
+  }, [fetchBudgets, user, loading, navigate]);
 
   const handleAdd = () => {
     setEditing(null);
@@ -90,8 +92,14 @@ const Budgets = () => {
     <div className="budgets">
       <h1>Budgets</h1>
       <Button onClick={handleAdd} className="mb-3">Add Budget</Button>
+
       <BudgetList budgets={budgets} onEdit={handleEdit} onDelete={handleDelete} />
-      <Modal isOpen={modalOpen} title={editing ? 'Edit Budget' : 'Add Budget'} onClose={() => setModalOpen(false)}>
+
+      <Modal
+        isOpen={modalOpen}
+        title={editing ? 'Edit Budget' : 'Add Budget'}
+        onClose={() => setModalOpen(false)}
+      >
         <FormInput
           label="Category"
           name="category"
@@ -117,6 +125,7 @@ const Budgets = () => {
           placeholder="Select period"
           required
         />
+
         <Button onClick={handleSave} variant="success">Save</Button>
       </Modal>
     </div>

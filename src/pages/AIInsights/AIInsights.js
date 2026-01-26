@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useContext, useRef } from "react";
+import React, { useEffect, useState, useContext, useRef, useCallback } from "react";
 import { AuthContext } from "../../context/AuthContext";
 import aiService from "../../services/aiService";
 import Loader from "../../components/Loader/Loader";
@@ -14,18 +14,22 @@ const AIInsights = () => {
     const [refreshing, setRefreshing] = useState(false);
     const prevIds = useRef(new Set());
 
-    const fetchInsights = async (showLoader = true) => {
+    // ✅ FIXED: stable function
+    const fetchInsights = useCallback(async (showLoader = true) => {
         if (!user) return;
         if (showLoader) setLoading(true);
+
         try {
             const data = await aiService.fetchInsights(user.id);
             console.log("🔍 Insights from backend:", data);
+
             const list = Array.isArray(data) ? data : [data].filter(Boolean);
             setInsights(list);
 
             // Notify for new insights
             const newOnes = list.filter((i) => !prevIds.current.has(i.id));
             if (newOnes.length > 0) newOnes.forEach((i) => notifyUser(i));
+
             prevIds.current = new Set(list.map((d) => d.id));
         } catch (e) {
             console.error("Error fetching insights:", e);
@@ -33,23 +37,29 @@ const AIInsights = () => {
             if (showLoader) setLoading(false);
             setRefreshing(false);
         }
-    };
+    }, [user]);
 
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    // ✅ Clean useEffect with polling
     useEffect(() => {
         fetchInsights();
-        const interval = setInterval(fetchInsights, POLL_MS);
+
+        const interval = setInterval(() => {
+            fetchInsights(false);
+        }, POLL_MS);
+
         return () => clearInterval(interval);
-    }, [user]);
+    }, [fetchInsights]);
 
     const generateNow = async () => {
         if (!user) return;
         setRefreshing(true);
+
         try {
             const res = await aiService.generateInsight(user.id);
             console.log("✅ New insight generated:", res);
             alert("✨ New insight generated successfully!");
-            await fetchInsights(false); // refresh without full-page loader
+
+            await fetchInsights(false);
         } catch (e) {
             console.error("Error generating insight:", e);
             alert("⚠️ Failed to generate insight. Check backend logs or your Hugging Face API key.");
@@ -60,8 +70,10 @@ const AIInsights = () => {
 
     const notifyUser = (insight) => {
         if (!("Notification" in window)) return;
+
         const text = insight?.message ?? insight?.content ?? "";
         const body = text.slice ? text.slice(0, 200) : String(text).substring(0, 200);
+
         if (Notification.permission === "granted") {
             new Notification("Finance Insight", { body });
         } else if (Notification.permission !== "denied") {
@@ -101,7 +113,9 @@ const AIInsights = () => {
                                     <small>{createdText(i.createdAt)}</small>
                                 </div>
                                 <div className="insight-body">
-                                    <pre style={{ whiteSpace: "pre-wrap" }}>{i.message ?? i.content ?? ""}</pre>
+                                    <pre style={{ whiteSpace: "pre-wrap" }}>
+                                        {i.message ?? i.content ?? ""}
+                                    </pre>
                                 </div>
                             </div>
                         ))
@@ -113,4 +127,3 @@ const AIInsights = () => {
 };
 
 export default AIInsights;
-
