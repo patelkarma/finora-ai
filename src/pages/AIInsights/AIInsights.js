@@ -35,6 +35,7 @@ const AIInsights = () => {
         }
     };
 
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     useEffect(() => {
         fetchInsights();
         const interval = setInterval(fetchInsights, POLL_MS);
@@ -78,7 +79,7 @@ const AIInsights = () => {
     return (
         <div className="ai-insights-page">
             <h1>AI Insights</h1>
-            
+
             <p>Get automated spending & savings suggestions from AI.</p>
 
             <Button onClick={generateNow} variant="primary" disabled={refreshing}>
@@ -91,7 +92,7 @@ const AIInsights = () => {
                 <div className="insights-list mt-3">
                     {insights.length === 0 ? (
                         <div className="insights-yet">
-                        <p>No insights yet.</p>
+                            <p>No insights yet.</p>
                         </div>
                     ) : (
                         insights.map((i) => (

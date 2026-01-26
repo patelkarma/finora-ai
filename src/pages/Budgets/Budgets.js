@@ -20,6 +20,7 @@ const Budgets = () => {
   const [loadingBudgets, setLoadingBudgets] = useState(true);
   const [error, setError] = useState(null);
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     if (!loading && !user) {
       navigate('/login'); // Redirect if not logged in

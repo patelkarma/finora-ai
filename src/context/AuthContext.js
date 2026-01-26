@@ -12,6 +12,7 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
 
   // Load saved login on mount; if token exists but no user, try to load user
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     const token = localStorage.getItem("token");
     const userJson = localStorage.getItem("user");
@@ -86,9 +87,9 @@ export const AuthProvider = ({ children }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, loginWithToken, logout , updateUser}}>
+    <AuthContext.Provider value={{ user, login, loginWithToken, logout, updateUser }}>
       {children}
     </AuthContext.Provider>
-    
+
   );
 };
