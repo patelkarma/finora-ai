@@ -24,7 +24,7 @@ const Signup = () => {
   const [otp, setOtp] = useState("");
   const [otpVerified, setOtpVerified] = useState(false);
 
-  const [setLoading] = useState(false);
+  const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState(null);
 
   const validateStep = () => {
@@ -99,7 +99,7 @@ const Signup = () => {
   };
 
   const handleGoogle = () => {
-    window.location.href = "http://localhost:8081/oauth2/authorization/google";
+    window.location.href = "https://finora-backend-rnd0.onrender.com/oauth2/authorization/google";
   };
 
   const handleRequestOtpMobile = async () => {
