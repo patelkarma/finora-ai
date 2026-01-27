@@ -1,7 +1,8 @@
 // src/services/aiService.js
 import axios from "axios";
 
-const API_URL = "http://localhost:8081/api/ai"; // Backend base route
+const API_URL = process.env.REACT_APP_API_URL + "/ai";
+; // Backend base route
 
 const getAuthHeader = () => {
     const token = localStorage.getItem("token");

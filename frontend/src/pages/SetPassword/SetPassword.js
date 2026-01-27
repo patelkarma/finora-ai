@@ -29,7 +29,7 @@ const SetPassword = () => {
 
         try {
             await axios.post(
-                "http://localhost:8081/api/auth/set-password",
+                "https://finora-backend-rnd0.onrender.com/api/auth/set-password",
                 { password },
                 {
                     headers: {
