@@ -102,6 +102,7 @@ const Signup = () => {
     window.location.href = "https://finora-backend-rnd0.onrender.com/oauth2/authorization/google";
   };
 
+  // For smanuall signup and otp verification.
   const handleRequestOtpMobile = async () => {
     setMessage(null);
     if (!phone && !email) {
