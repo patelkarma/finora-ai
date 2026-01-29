@@ -1,7 +1,8 @@
 // src/services/aiService.js
 import axios from "axios";
 
-const API_URL = process.env.REACT_APP_API_URL + "/ai";
+// const API_URL = process.env.REACT_APP_API_URL + "/ai";
+const API_URL = "https://finora-backend-rnd0.onrender.com/api/ai";
 ; // Backend base route
 
 const getAuthHeader = () => {
