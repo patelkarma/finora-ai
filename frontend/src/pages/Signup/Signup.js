@@ -24,7 +24,7 @@ const Signup = () => {
   const [otp, setOtp] = useState("");
   const [otpVerified, setOtpVerified] = useState(false);
 
-  const [loading, setLoading] = useState(false);
+  const [setLoading] = useState(false);
   const [message, setMessage] = useState(null);
 
   const validateStep = () => {
