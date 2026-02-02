@@ -74,5 +74,6 @@ public class GoogleOAuth2SuccessHandler implements AuthenticationSuccessHandler 
                 : FRONTEND_URL + "/oauth-success?token=" + token;
 
         response.sendRedirect(redirectURL);
+        System.out.println("🔥 LIVE OAUTH HANDLER EXECUTED 🔥");
     }
 }
