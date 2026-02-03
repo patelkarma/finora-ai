@@ -11,8 +11,8 @@ import java.util.List;
 import java.util.Optional;
 
 @CrossOrigin(origins = {
-        "http://localhost:3000",
-        "https://finora-frontend-smoky.vercel.app"
+        "https://finora-frontend-smoky.vercel.app",
+        "http://localhost:3000"
 })
 @RestController
 @RequestMapping("/api/transactions")

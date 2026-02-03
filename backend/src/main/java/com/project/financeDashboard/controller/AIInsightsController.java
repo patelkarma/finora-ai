@@ -10,8 +10,8 @@ import java.util.*;
 @RestController
 @RequestMapping("/api/ai")
 @CrossOrigin(origins = {
-        "http://localhost:3000",
-        "https://finora-frontend-smoky.vercel.app"
+        "https://finora-frontend-smoky.vercel.app",
+        "http://localhost:3000"
 })
 public class AIInsightsController {
 
