@@ -1,7 +1,7 @@
 import axios from "axios";
 
-// const API_URL = process.env.REACT_APP_API_URL + "/auth";
-const API_URL = "https://finora-backend-rnd0.onrender.com/api/auth";
+// Use Vite env variable
+const API_URL = `${process.env.REACT_APP_API_URL}/auth`;
 
 
 const login = async (email, password) => {
@@ -41,4 +41,3 @@ export default {
   logout,
   getCurrentUser,
 };
-

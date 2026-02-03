@@ -46,6 +46,12 @@ const Login = () => {
     }
   };
 
+  const handleGoogleLogin = () => {
+    const backendBase = process.env.REACT_APP_API_URL.replace("/api", "");
+    window.location.href = `${backendBase}/oauth2/authorization/google`;
+  };
+
+
   return (
     <div className="login-layout">
 
@@ -115,9 +121,19 @@ const Login = () => {
 
           <div className="divider"><span>OR</span></div>
 
-          <div className="links">
-            <a href="/signup">Create new account</a>
-          </div>
+          <button
+            type="button"
+            className="btn-primary google-btn"
+            onClick={handleGoogleLogin}
+          >
+            <img
+              src="https://upload.wikimedia.org/wikipedia/commons/c/c1/Google_%22G%22_logo.svg"
+              alt="Google"
+              className="google-icon"
+            />
+            Continue with Google
+          </button>
+
         </div>
       </div>
     </div>

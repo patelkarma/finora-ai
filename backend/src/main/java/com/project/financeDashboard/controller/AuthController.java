@@ -27,7 +27,11 @@ import jakarta.servlet.http.HttpServletRequest;
 
 @RestController
 @RequestMapping("/api/auth")
-@CrossOrigin(origins = "https://finora-frontend-smoky.vercel.app")
+@CrossOrigin(origins = {
+        "http://localhost:3000",
+        "https://finora-frontend-smoky.vercel.app"
+})
+
 public class AuthController {
 
     private final UserService userService;
@@ -75,7 +79,22 @@ public class AuthController {
         email = email.trim().toLowerCase();
 
         // ❌ Prevent duplicate users
-        if (userRepository.findByEmail(email).isPresent()) {
+        Optional<User> existing = userRepository.findByEmail(email);
+
+        if (existing.isPresent()) {
+            User user = existing.get();
+
+            if (user.isOauthUser() && !user.isPasswordSet()) {
+                // allow password creation for OAuth user
+                user.setPassword(passwordEncoder.encode(password));
+                user.setPasswordSet(true);
+                user.setName(name);
+                user.setPhone(phone);
+                userRepository.save(user);
+
+                return ResponseEntity.ok(Map.of("message", "Account completed successfully"));
+            }
+
             return ResponseEntity.status(409)
                     .body(Map.of("message", "User already exists"));
         }
@@ -83,7 +102,7 @@ public class AuthController {
         User user = new User();
         user.setName(name);
         user.setEmail(email);
-        user.setPassword(passwordEncoder.encode(password)); // ✅ PASSWORD SAVED
+        user.setPassword(passwordEncoder.encode(password));
         user.setPasswordSet(true);
         user.setVerified(true); // ✅ OTP already verified
         user.setOauthUser(false);

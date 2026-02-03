@@ -9,7 +9,10 @@ import java.util.*;
 
 @RestController
 @RequestMapping("/api/ai")
-@CrossOrigin(origins = "https://finora-frontend-smoky.vercel.app")
+@CrossOrigin(origins = {
+        "http://localhost:3000",
+        "https://finora-frontend-smoky.vercel.app"
+})
 public class AIInsightsController {
 
     private final OllamaService huggingFaceService;

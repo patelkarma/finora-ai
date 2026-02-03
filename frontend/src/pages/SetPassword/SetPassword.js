@@ -29,7 +29,7 @@ const SetPassword = () => {
 
         try {
             await axios.post(
-                "https://finora-backend-rnd0.onrender.com/api/auth/set-password",
+                `${process.env.REACT_APP_API_URL}/auth/set-password`,
                 { password },
                 {
                     headers: {

@@ -1,5 +1,5 @@
 import "bootstrap/dist/css/bootstrap.min.css";
-import React, { useState, useContext } from "react";
+import React, { useState, useContext, useEffect } from "react";
 import "./Signup.css";
 import api from "../../services/api";
 import { AuthContext } from "../../context/AuthContext";
@@ -26,6 +26,12 @@ const Signup = () => {
 
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState(null);
+
+  useEffect(() => {
+    setOtpVerified(false);
+    setOtp("");
+  }, [email]);
+
 
   const validateStep = () => {
     if (step === 1) {
@@ -69,7 +75,7 @@ const Signup = () => {
 
     setLoading(true);
     try {
-      await api.post("/auth/signup", {
+      const signupRes = await api.post("/auth/signup", {
         name,
         email,
         password,
@@ -77,7 +83,12 @@ const Signup = () => {
         phone: phone || null,
       });
 
+      if (signupRes.status !== 200) {
+        throw new Error("Signup failed");
+      }
+
       const loginRes = await api.post("/auth/login", { email, password });
+
       const token = loginRes.data.token;
       const user = loginRes.data.user;
 
@@ -96,10 +107,6 @@ const Signup = () => {
     } finally {
       setLoading(false);
     }
-  };
-
-  const handleGoogle = () => {
-    window.location.href = "https://finora-backend-rnd0.onrender.com/oauth2/authorization/google";
   };
 
   // For smanuall signup and otp verification.
@@ -245,18 +252,6 @@ const Signup = () => {
 
                 <button type="submit" className="btn-primary extra-top-padding" >
                   Create Account & Login
-                </button>
-
-
-                <div className="divider"><span>OR</span></div>
-
-                <button type="button" className="btn-primary google-btn" onClick={handleGoogle}>
-                  <img
-                    src="https://upload.wikimedia.org/wikipedia/commons/c/c1/Google_%22G%22_logo.svg"
-                    alt="Google"
-                    className="google-icon"
-                  />
-                  Continue with Google
                 </button>
 
               </>

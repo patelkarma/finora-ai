@@ -7,7 +7,10 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.Optional;
 
-@CrossOrigin(origins = "https://finora-frontend-smoky.vercel.app")
+@CrossOrigin(origins = {
+        "http://localhost:3000",
+        "https://finora-frontend-smoky.vercel.app"
+})
 @RestController
 @RequestMapping("/api/users")
 public class UserController {

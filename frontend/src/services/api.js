@@ -1,6 +1,8 @@
 import axios from "axios";
 
-const BASE = process.env.VITE_API_URL || "https://finora-backend-rnd0.onrender.com/api";
+// Vite uses import.meta.env
+const BASE = process.env.REACT_APP_API_URL || "https://finora-backend-rnd0.onrender.com";
+
 
 const api = axios.create({
   baseURL: BASE,
