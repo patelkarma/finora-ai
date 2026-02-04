@@ -85,7 +85,7 @@ public class SecurityConfig {
                         .requestMatchers("/oauth2/**").permitAll()
                         .anyRequest().authenticated())
 
-                .sessionManagement(sess -> sess.sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED))
+                .sessionManagement(sess -> sess.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authenticationProvider(authenticationProvider())
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
 

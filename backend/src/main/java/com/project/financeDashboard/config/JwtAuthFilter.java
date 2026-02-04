@@ -32,8 +32,11 @@ public class JwtAuthFilter extends OncePerRequestFilter {
 
         String path = request.getServletPath();
 
-        // ✅ SKIP JWT CHECK FOR SET PASSWORD
-        if (path.equals("/api/auth/set-password")) {
+        // 🚨 SKIP JWT FOR OAUTH & PASSWORD FLOW
+        if (path.startsWith("/oauth2/") ||
+                path.startsWith("/login/oauth2/") ||
+                path.equals("/api/auth/set-password") ||
+                path.equals("/api/auth/me")) {
             filterChain.doFilter(request, response);
             return;
         }
