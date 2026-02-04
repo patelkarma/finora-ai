@@ -69,7 +69,15 @@ const AuthWrapper = () => {
             <Route path="/ai-insights" element={<ProtectedRoute><AIInsights /></ProtectedRoute>} />
 
             {/* Default */}
-            <Route path="*" element={<Navigate to={user ? "/dashboard" : "/login"} replace />} />
+            <Route
+              path="*"
+              element={
+                window.location.pathname.startsWith("/set-password")
+                  ? <SetPassword />
+                  : <Navigate to={user ? "/dashboard" : "/login"} replace />
+              }
+            />
+
           </Routes>
         </main>
       </div>
