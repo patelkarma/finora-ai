@@ -41,6 +41,15 @@ export const AuthProvider = ({ children }) => {
 
       const userData = res.data;
 
+      // 🚨 CRITICAL FIX
+      if (userData.oauthUser && userData.passwordSet === false) {
+        // Do NOT auto-login OAuth users without password
+        localStorage.removeItem("user");
+        setUser(null);
+        return userData;
+      }
+
+      // Normal login
       localStorage.setItem("user", JSON.stringify(userData));
       setUser(userData);
 
@@ -68,12 +77,20 @@ export const AuthProvider = ({ children }) => {
 
     if (userJson) {
       try {
-        setUser(JSON.parse(userJson));
-        return;
+        const parsedUser = JSON.parse(userJson);
+
+        // 🚨 Don't restore OAuth user without password
+        if (parsedUser.oauthUser && parsedUser.passwordSet === false) {
+          localStorage.removeItem("user");
+        } else {
+          setUser(parsedUser);
+          return;
+        }
       } catch {
         localStorage.removeItem("user");
       }
     }
+
 
     if (token && !userJson) {
       loginWithToken(token).catch((e) => {
