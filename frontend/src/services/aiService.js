@@ -38,7 +38,10 @@ const fetchInsights = async (userId) => {
     }
 };
 
-export default {
-    fetchInsights,
-    generateInsight,
+const aiService = {
+  fetchInsights,
+  generateInsight,
 };
+
+export default aiService;
+

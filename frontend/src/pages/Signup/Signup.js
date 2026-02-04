@@ -250,9 +250,14 @@ const Signup = () => {
                   Verify OTP
                 </button>
 
-                <button type="submit" className="btn-primary extra-top-padding" >
-                  Create Account & Login
+                <button
+                  type="submit"
+                  className="btn-primary extra-top-padding"
+                  disabled={loading}
+                >
+                  {loading ? "Creating account..." : "Create Account & Login"}
                 </button>
+
 
               </>
             )}
