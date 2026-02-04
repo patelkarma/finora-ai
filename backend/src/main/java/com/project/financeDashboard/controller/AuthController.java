@@ -301,7 +301,9 @@ public class AuthController {
                         "id", user.getId(),
                         "name", user.getName(),
                         "email", user.getEmail(),
-                        "salary", user.getSalary())))
+                        "salary", user.getSalary(),
+                        "oauthUser", user.isOauthUser(),
+                        "passwordSet", user.isPasswordSet())))
                 .orElseGet(() -> ResponseEntity.status(404).body(Map.of("message", "User not found")));
     }
 

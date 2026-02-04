@@ -69,9 +69,7 @@ public class GoogleOAuth2SuccessHandler implements AuthenticationSuccessHandler 
 
         String token = jwtUtil.generateToken(user.getEmail());
 
-        String redirectURL = !user.isPasswordSet()
-                ? FRONTEND_URL + "/set-password?token=" + token
-                : FRONTEND_URL + "/oauth-success?token=" + token;
+        String redirectURL = FRONTEND_URL + "/oauth-success?token=" + token;
 
         response.sendRedirect(redirectURL);
         System.out.println("🔥 LIVE OAUTH HANDLER EXECUTED 🔥");
