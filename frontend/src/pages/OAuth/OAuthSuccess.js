@@ -8,7 +8,6 @@ export default function OAuthSuccess() {
 
     useEffect(() => {
         const params = new URLSearchParams(window.location.search);
-
         const token = params.get("token");
 
         if (!token) {
@@ -16,28 +15,25 @@ export default function OAuthSuccess() {
             return;
         }
 
-        // ⚠️ DO NOT auto-login blindly
-        loginWithToken(token)
-            .then((user) => {
+        loginWithToken(token).then((user) => {
 
-                // 🔑 NEW GOOGLE USER → FORCE SET PASSWORD
-                if (user.oauthUser && !user.passwordSet) {
-                    navigate(`/set-password?token=${token}`);
-                    return;
-                }
+            // 🚨 GOOGLE USER WITHOUT PASSWORD → GO SET PASSWORD
+            if (user.oauthUser && !user.passwordSet) {
+                navigate(`/set-password?token=${token}`);
+                return;
+            }
 
-                // Salary logic
-                if (!user.salary) {
-                    navigate("/salary");
-                    return;
-                }
+            // salary check
+            if (!user.salary) {
+                navigate("/salary");
+                return;
+            }
 
-                navigate("/dashboard");
-            })
-            .catch((err) => {
-                console.error("OAuth login failed:", err);
-                navigate("/login?oauth_error=true");
-            });
+            navigate("/dashboard");
+
+        }).catch(() => {
+            navigate("/login?oauth_error=true");
+        });
 
     }, [loginWithToken, navigate]);
 

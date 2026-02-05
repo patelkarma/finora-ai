@@ -41,25 +41,26 @@ export const AuthProvider = ({ children }) => {
 
       const userData = res.data;
 
-      // 🚨 CRITICAL FIX
-      if (userData.oauthUser && userData.passwordSet === false) {
-        // Do NOT auto-login OAuth users without password
+      // 🚨 CRITICAL: Google user without password → DO NOT LOGIN
+      if (userData.oauthUser === true && userData.passwordSet === false) {
+        setUser(null);               // not logged in
         localStorage.removeItem("user");
-        setUser(null);
-        return userData;
+        return userData;             // just return info
       }
 
-      // Normal login
+      // normal login
       localStorage.setItem("user", JSON.stringify(userData));
       setUser(userData);
 
       return userData;
+
     } catch (err) {
-      console.error("Failed to load user profile:", err);
+      console.error("Failed to load user:", err);
       logout();
       throw err;
     }
   }, []);
+
 
   // Logout
   const logout = () => {
@@ -75,33 +76,13 @@ export const AuthProvider = ({ children }) => {
     const token = localStorage.getItem("token");
     const userJson = localStorage.getItem("user");
 
-    if (userJson) {
-      try {
-        const parsedUser = JSON.parse(userJson);
+    if (!token) return;
 
-        // 🚨 Don't restore OAuth user without password
-        if (parsedUser.oauthUser && parsedUser.passwordSet === false) {
-          localStorage.removeItem("user");
-        } else {
-          setUser(parsedUser);
-          return;
-        }
-      } catch {
-        localStorage.removeItem("user");
-      }
-    }
+    // 🚨 DO NOT AUTO LOGIN GOOGLE USER BEFORE PASSWORD
+    loginWithToken(token).catch(() => {
+      localStorage.removeItem("token");
+    });
 
-
-    if (token && !userJson) {
-      loginWithToken(token).catch((e) => {
-        console.warn("Failed to restore session from token:", e);
-      });
-    }
   }, [loginWithToken]);
 
-  return (
-    <AuthContext.Provider value={{ user, login, loginWithToken, logout, updateUser }}>
-      {children}
-    </AuthContext.Provider>
-  );
 };
