@@ -1,4 +1,4 @@
-import React, { createContext, useState, useEffect, useCallback } from "react";
+import { createContext, useState, useEffect, useCallback } from "react";
 import api from "../services/api";
 
 export const AuthContext = createContext({
@@ -12,13 +12,13 @@ export const AuthContext = createContext({
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
 
-  // Save updated user
+  // ✅ Update user manually
   const updateUser = (updatedUser) => {
     localStorage.setItem("user", JSON.stringify(updatedUser));
     setUser(updatedUser);
   };
 
-  // Regular login (email/password)
+  // ✅ Normal login (email/password)
   const login = (userObj, token) => {
     if (token) localStorage.setItem("token", token);
 
@@ -28,7 +28,7 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  // OAuth login (token only)
+  // ✅ OAuth login using token
   const loginWithToken = useCallback(async (token) => {
     if (!token) throw new Error("No token provided");
 
@@ -41,11 +41,11 @@ export const AuthProvider = ({ children }) => {
 
       const userData = res.data;
 
-      // 🚨 CRITICAL: Google user without password → DO NOT LOGIN
+      // 🚨 Google user without password → DO NOT LOGIN YET
       if (userData.oauthUser === true && userData.passwordSet === false) {
-        setUser(null);               // not logged in
+        setUser(null);
         localStorage.removeItem("user");
-        return userData;             // just return info
+        return userData;
       }
 
       // normal login
@@ -61,8 +61,7 @@ export const AuthProvider = ({ children }) => {
     }
   }, []);
 
-
-  // Logout
+  // ✅ Logout
   const logout = () => {
     localStorage.removeItem("token");
     localStorage.removeItem("user");
@@ -71,18 +70,20 @@ export const AuthProvider = ({ children }) => {
     window.location.href = "/login";
   };
 
-  // Restore login session on mount
+  // ✅ Restore session on reload
   useEffect(() => {
     const token = localStorage.getItem("token");
-    const userJson = localStorage.getItem("user");
-
     if (!token) return;
 
-    // 🚨 DO NOT AUTO LOGIN GOOGLE USER BEFORE PASSWORD
     loginWithToken(token).catch(() => {
       localStorage.removeItem("token");
     });
-
   }, [loginWithToken]);
 
+  // ⭐ IMPORTANT: return provider
+  return (
+    <AuthContext.Provider value={{ user, login, loginWithToken, logout, updateUser }}>
+      {children}
+    </AuthContext.Provider>
+  );
 };
