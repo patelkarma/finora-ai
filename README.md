@@ -152,7 +152,7 @@ AI-assisted development was used to accelerate implementation while maintaining 
 - ./mvnw spring-boot:run
 
 
-Make sure the backend is running before starting the frontend.
+- Make sure the backend is running before starting the frontend.
 
 #### Environment Variables (Example)
 - REACT_APP_API_BASE_URL=http://localhost:8080
