@@ -133,7 +133,10 @@ The project focuses on real-world frontend architecture, secure authentication f
 🧠 Backend architecture was intentionally designed with a focus on security and scalability.
 AI-assisted development was used to accelerate implementation while maintaining full ownership of system design and API contracts.
 
-# ⚙️ Local Setup Instructions
+# ⚙️ Local Development Setup (for reference)
+- This section documents how the project runs in local development.  
+- A full working demonstration is available in the video above.
+  
 ### Prerequisites
 
 - Node.js (v18+ recommended)
