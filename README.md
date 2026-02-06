@@ -7,180 +7,180 @@ The project focuses on real-world frontend architecture, secure authentication f
 
 # 🎥 Demo Video 
 
-📽️ Full Application Walkthrough
+## 📽️ Full Application Walkthrough
 👉 Add your video link here (Google Drive / YouTube – Unlisted)
 
-The demo covers:
+###The demo covers:
 
-Authentication (Google OAuth & OTP login)
+- Authentication (Google OAuth & OTP login)
 
-Dashboard loading with API-driven data
+- Dashboard loading with API-driven data
 
-Expense and budget views
+- Expense and budget views
 
-AI-powered financial insights
+- AI-powered financial insights
 
-Frontend architecture overview
+- Frontend architecture overview
 
 # 🧠 Why This Project Matters
 
-Unlike basic CRUD applications, Finora AI is designed as a realistic finance application with:
+- Unlike basic CRUD applications, Finora AI is designed as a realistic finance application with:
 
-Secure authentication flows
+- Secure authentication flows
 
-Protected routes
+- Protected routes
 
-API-driven dashboards
+- API-driven dashboards
 
-AI-powered insights
+- AI-powered insights
 
-A scalable, production-focused architecture mindset
+- A scalable, production-focused architecture mindset
 
-This project reflects how modern production frontend systems are actually built.
+- This project reflects how modern production frontend systems are actually built.
 
  # 🛠️ Tech Stack
-Frontend
+ ### Frontend
 
-React.js
+- React.js
 
-Context API (Global state management)
+- Context API (Global state management)
 
-JavaScript (ES6+)
+- JavaScript (ES6+)
 
-Bootstrap
+- Bootstrap
 
-HTML5 & CSS3
+- HTML5 & CSS3
 
-Backend
+ ### Backend
 
-Spring Boot (AI-assisted development)
+- Spring Boot (AI-assisted development)
 
-RESTful APIs
+- RESTful APIs
 
-OAuth & OTP-based authentication flows
+- OAuth & OTP-based authentication flows
 
-AI Integration
+- AI Integration
 
-Ollama (Local LLM) for AI-powered financial insights
+- Ollama (Local LLM) for AI-powered financial insights
 
-Architecture designed for easy migration to cloud-based LLMs
+- Architecture designed for easy migration to cloud-based LLMs
 
-Tools & Deployment
+### Tools & Deployment
 
-Git & GitHub
+- Git & GitHub
 
-npm
+- npm
 
-Vercel (frontend deployment-ready)
+- Vercel (frontend deployment-ready)
 
-Chrome DevTools
+- Chrome DevTools
 
 # ✨ Key Features
-🔐 Authentication
+ ### 🔐 Authentication
 
-Google OAuth login
+- Google OAuth login
 
-OTP-based email authentication
+- OTP-based email authentication
 
-Protected routes and session handling
+- Protected routes and session handling
 
-📊 Dashboard
+### 📊 Dashboard
 
-Expense tracking
+- Expense tracking
 
-Budget monitoring
+- Budget monitoring
 
-Financial summaries
+- Financial summaries
 
-API-driven dynamic data rendering
+- API-driven dynamic data rendering
 
-🤖 AI Financial Insights
+### 🤖 AI Financial Insights
 
-Personalized insights generated using a local LLM
+- Personalized insights generated using a local LLM
 
-Clean separation between AI logic and UI
+- Clean separation between AI logic and UI
 
-Future-ready design for cloud AI integration
+- Future-ready design for cloud AI integration
 
-🧩 Architecture
+### 🧩 Architecture
 
-Modular React component structure
+- Modular React component structure
 
-Dedicated API service layer
+- Dedicated API service layer
 
-Global state management using Context API
+- Global state management using Context API
 
-Clean separation of UI, logic, and data flow
+- Clean separation of UI, logic, and data flow
 
 # 🏗️ System Architecture Overview
-Frontend (React)
- ├── Components (Reusable UI)
- ├── Context (Global State)
- ├── Services (API Layer)
- ├── Auth (Protected Routes)
- └── Pages (Dashboard Views)
+### Frontend (React)
+ ── Components (Reusable UI)
+ ── Context (Global State)
+ ── Services (API Layer)
+ ── Auth (Protected Routes)
+ ── Pages (Dashboard Views)
 
-Backend (Spring Boot – AI-assisted)
- ├── Controllers
- ├── Services
- ├── Repositories
- └── Auth & AI Logic
+### Backend (Spring Boot – AI-assisted)
+ ── Controllers
+ ── Services
+ ── Repositories
+ ── Auth & AI Logic
 
 
 🧠 Backend architecture was intentionally designed with a focus on security and scalability.
 AI-assisted development was used to accelerate implementation while maintaining full ownership of system design and API contracts.
 
 # ⚙️ Local Setup Instructions
-Prerequisites
+### Prerequisites
 
-Node.js (v18+ recommended)
+- Node.js (v18+ recommended)
 
-npm
+- npm
 
-Java (for backend)
+- Java (for backend)
 
-Ollama (for local AI insights)
+- Ollama (for local AI insights)
 
-Frontend Setup
-git clone https://github.com/patelkarma/finora-ai.git
-cd finora-ai/frontend
-npm install
-npm start
+### Frontend Setup
+- git clone https://github.com/patelkarma/finora-ai.git
+- cd finora-ai/frontend
+- npm install
+- npm start
 
-Backend Setup (Spring Boot)
-cd backend
-./mvnw spring-boot:run
+### Backend Setup (Spring Boot)
+- cd backend
+- ./mvnw spring-boot:run
 
 
 Make sure the backend is running before starting the frontend.
 
-Environment Variables (Example)
-REACT_APP_API_BASE_URL=http://localhost:8080
-REACT_APP_GOOGLE_CLIENT_ID=your_google_client_id
+#### Environment Variables (Example)
+- REACT_APP_API_BASE_URL=http://localhost:8080
+- REACT_APP_GOOGLE_CLIENT_ID=your_google_client_id
 
 # 🎯 What I Learned From This Project
 
-Designing production-style React architecture
+- Designing production-style React architecture
 
-Handling real-world authentication flows
+- Handling real-world authentication flows
 
-Integrating frontend with secure backend APIs
+- Integrating frontend with secure backend APIs
 
-Using AI-assisted development responsibly
+- Using AI-assisted development responsibly
 
-Thinking beyond UI into system-level design
+- Thinking beyond UI into system-level design
 
-Preparing applications for real deployment scenarios
+- Preparing applications for real deployment scenarios
 
 # 📌 Project Status
 
-✅ Core features complete
+- ✅ Core features complete
 
-✅ Fully functional in local environment
+- ✅ Fully functional in local environment
 
-📽️ Demo video included
+- 📽️ Demo video included
 
-🚀 Deployment-ready architecture (live deployment intentionally deferred)
+- 🚀 Deployment-ready architecture (live deployment intentionally deferred)
 
 # 👩‍💻 About the Developer
 
@@ -188,24 +188,23 @@ Karma Patel
 Frontend Developer | React.js
 3rd Year – Cloud & Application Development
 
-Strong focus on frontend architecture and UI/UX
+- Strong focus on frontend architecture and UI/UX
 
-Experience with real-world authentication and API integration
+- Experience with real-world authentication and API integration
 
-Actively learning Spring Boot to strengthen full-stack ownership
+- Actively learning Spring Boot to strengthen full-stack ownership
 
-GitHub: https://github.com/patelkarma
+- GitHub: https://github.com/patelkarma
 
 # ⭐ Final Note for Recruiters
 
-This project reflects my ability to:
-
+- This project reflects my ability to:
 Build realistic, scalable frontend systems
 
-Work confidently with backend services
+- Work confidently with backend services
 
-Use AI as a professional development accelerator
+- Use AI as a professional development accelerator
 
-Clearly explain and take ownership of everything I build
+- Clearly explain and take ownership of everything I build
 
 📩 I would love to discuss the architecture, decisions, and trade-offs behind Finora AI in detail.
