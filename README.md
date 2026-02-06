@@ -1,11 +1,11 @@
-🚀 Finora AI – Personal Finance Dashboard
+# 🚀 Finora AI – Personal Finance Dashboard
 
 Finora AI is a production-oriented personal finance dashboard built with React.js that helps users track expenses, manage budgets, and gain AI-powered financial insights.
 The project focuses on real-world frontend architecture, secure authentication flows, and seamless frontend–backend integration.
 
 ⚡ This project is demonstrated via localhost, with a full video walkthrough included below.
 
-🎥 Demo Video (Recommended)
+# 🎥 Demo Video 
 
 📽️ Full Application Walkthrough
 👉 Add your video link here (Google Drive / YouTube – Unlisted)
@@ -22,7 +22,7 @@ AI-powered financial insights
 
 Frontend architecture overview
 
-🧠 Why This Project Matters
+# 🧠 Why This Project Matters
 
 Unlike basic CRUD applications, Finora AI is designed as a realistic finance application with:
 
@@ -38,7 +38,7 @@ A scalable, production-focused architecture mindset
 
 This project reflects how modern production frontend systems are actually built.
 
-🛠️ Tech Stack
+ # 🛠️ Tech Stack
 Frontend
 
 React.js
@@ -75,7 +75,7 @@ Vercel (frontend deployment-ready)
 
 Chrome DevTools
 
-✨ Key Features
+# ✨ Key Features
 🔐 Authentication
 
 Google OAuth login
@@ -112,7 +112,7 @@ Global state management using Context API
 
 Clean separation of UI, logic, and data flow
 
-🏗️ System Architecture Overview
+# 🏗️ System Architecture Overview
 Frontend (React)
  ├── Components (Reusable UI)
  ├── Context (Global State)
@@ -130,7 +130,7 @@ Backend (Spring Boot – AI-assisted)
 🧠 Backend architecture was intentionally designed with a focus on security and scalability.
 AI-assisted development was used to accelerate implementation while maintaining full ownership of system design and API contracts.
 
-⚙️ Local Setup Instructions
+# ⚙️ Local Setup Instructions
 Prerequisites
 
 Node.js (v18+ recommended)
@@ -158,7 +158,7 @@ Environment Variables (Example)
 REACT_APP_API_BASE_URL=http://localhost:8080
 REACT_APP_GOOGLE_CLIENT_ID=your_google_client_id
 
-🎯 What I Learned From This Project
+# 🎯 What I Learned From This Project
 
 Designing production-style React architecture
 
@@ -172,7 +172,7 @@ Thinking beyond UI into system-level design
 
 Preparing applications for real deployment scenarios
 
-📌 Project Status
+# 📌 Project Status
 
 ✅ Core features complete
 
@@ -182,7 +182,7 @@ Preparing applications for real deployment scenarios
 
 🚀 Deployment-ready architecture (live deployment intentionally deferred)
 
-👩‍💻 About the Developer
+# 👩‍💻 About the Developer
 
 Karma Patel
 Frontend Developer | React.js
@@ -196,7 +196,7 @@ Actively learning Spring Boot to strengthen full-stack ownership
 
 GitHub: https://github.com/patelkarma
 
-⭐ Final Note for Recruiters
+# ⭐ Final Note for Recruiters
 
 This project reflects my ability to:
 
