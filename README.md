@@ -8,7 +8,10 @@ The project focuses on real-world frontend architecture, secure authentication f
 # 🎥 Demo Video 
 
 ## 📽️ Full Application Walkthrough
-👉 Add your video link here (Google Drive / YouTube – Unlisted)
+
+- 🚀 The application is currently being prepared for production deployment.  
+- A complete working demonstration is provided via video walkthrough.
+- 👉 Add your video link here (Google Drive / YouTube – Unlisted)
 
 ### The demo covers:
 
@@ -151,7 +154,6 @@ AI-assisted development was used to accelerate implementation while maintaining 
 - cd backend
 - ./mvnw spring-boot:run
 
-
 - Make sure the backend is running before starting the frontend.
 
 #### Environment Variables (Example)
@@ -179,7 +181,9 @@ AI-assisted development was used to accelerate implementation while maintaining 
 
 - 📽️ Demo video included
 
-- 🚀 Deployment-ready architecture (live deployment intentionally deferred)
+- 🚀 Deployment currently in progress and being optimized for production
+   
+-  Architecture designed to support seamless cloud deployment 
 
 # 👩‍💻 About the Developer
 
