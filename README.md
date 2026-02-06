@@ -10,7 +10,7 @@ The project focuses on real-world frontend architecture, secure authentication f
 ## 📽️ Full Application Walkthrough
 👉 Add your video link here (Google Drive / YouTube – Unlisted)
 
-###The demo covers:
+### The demo covers:
 
 - Authentication (Google OAuth & OTP login)
 
@@ -114,17 +114,17 @@ The project focuses on real-world frontend architecture, secure authentication f
 
 # 🏗️ System Architecture Overview
 ### Frontend (React)
- ── Components (Reusable UI)
- ── Context (Global State)
- ── Services (API Layer)
- ── Auth (Protected Routes)
- ── Pages (Dashboard Views)
+ - Components (Reusable UI)
+ - Context (Global State)
+ - Services (API Layer)
+ - Auth (Protected Routes)
+ - Pages (Dashboard Views)
 
 ### Backend (Spring Boot – AI-assisted)
- ── Controllers
- ── Services
- ── Repositories
- ── Auth & AI Logic
+ - Controllers
+ - Services
+ - Repositories
+ - Auth & AI Logic
 
 
 🧠 Backend architecture was intentionally designed with a focus on security and scalability.
@@ -156,7 +156,6 @@ Make sure the backend is running before starting the frontend.
 
 #### Environment Variables (Example)
 - REACT_APP_API_BASE_URL=http://localhost:8080
-- REACT_APP_GOOGLE_CLIENT_ID=your_google_client_id
 
 # 🎯 What I Learned From This Project
 
@@ -198,8 +197,7 @@ Frontend Developer | React.js
 
 # ⭐ Final Note for Recruiters
 
-- This project reflects my ability to:
-Build realistic, scalable frontend systems
+- This project reflects my ability to Build realistic, scalable frontend systems
 
 - Work confidently with backend services
 
