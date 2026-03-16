@@ -58,7 +58,9 @@ export const AuthProvider = ({ children }) => {
 
     } catch (err) {
       console.error("Failed to load user:", err);
-      logout();
+      localStorage.removeItem("token");
+      localStorage.removeItem("user");
+      setUser(null);
       throw err;
     }
   }, []);

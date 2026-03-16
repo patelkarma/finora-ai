@@ -27,6 +27,7 @@ const Signup = () => {
   const [otpVerified, setOtpVerified] = useState(false);
 
   const [loading, setLoading] = useState(false);
+  const [otpLoading, setOtpLoading] = useState(false);
   const [message, setMessage] = useState(null);
 
   useEffect(() => {
@@ -118,7 +119,7 @@ const Signup = () => {
       setMessage("Enter phone or email to request OTP.");
       return;
     }
-    setLoading(true);
+    setOtpLoading(true);
     try {
       const payload = email ? { email } : { phone };
       await api.post("/auth/request-otp", payload);
@@ -126,7 +127,7 @@ const Signup = () => {
     } catch (err) {
       setMessage(err?.response?.data?.message || "Failed to send OTP");
     } finally {
-      setLoading(false);
+      setOtpLoading(false);
     }
   };
 
@@ -136,7 +137,7 @@ const Signup = () => {
       setMessage("Please enter email before requesting OTP.");
       return;
     }
-    setLoading(true);
+    setOtpLoading(true);
     try {
       await api.post("/auth/verify-otp", { email, code: otp });
       setOtpVerified(true);
@@ -144,7 +145,7 @@ const Signup = () => {
     } catch (err) {
       setMessage(err?.response?.data?.message || "Invalid OTP");
     } finally {
-      setLoading(false);
+      setOtpLoading(false);
     }
   };
 
@@ -239,17 +240,22 @@ const Signup = () => {
             {/* STEP 3 */}
             {step === 3 && (
               <>
-                <button type="button" className="btn-primary" onClick={handleRequestOtpMobile}>
-                  Send OTP (email)
+                <button type="button" className="btn-primary" disabled={otpLoading} onClick={handleRequestOtpMobile}>
+                  {otpLoading ? "Sending OTP..." : "Send OTP (email)"}
                 </button>
 
                 <div className="field">
-                  <input value={otp} onChange={(e) => setOtp(e.target.value)} placeholder=" " />
+                  <input
+                    value={otp}
+                    onChange={(e) => setOtp(e.target.value)}
+                    onKeyDown={(e) => { if (e.key === "Enter") e.preventDefault(); }}
+                    placeholder=" "
+                  />
                   <label>Enter OTP</label>
                 </div>
 
-                <button type="button" className="btn-primary" onClick={handleVerifyOtp}>
-                  Verify OTP
+                <button type="button" className="btn-primary" disabled={otpLoading} onClick={handleVerifyOtp}>
+                  {otpLoading ? "Verifying..." : "Verify OTP"}
                 </button>
 
                 <button
