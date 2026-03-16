@@ -1,11 +1,7 @@
-import axios from "axios";
-
-// Use Vite env variable
-const API_URL = `${process.env.REACT_APP_API_URL}/auth`;
-
+import api from "./api";
 
 const login = async (email, password) => {
-  const response = await axios.post(`${API_URL}/login`, { email, password });
+  const response = await api.post("/auth/login", { email, password });
 
   // save token + user
   if (response.data.token) {
@@ -16,7 +12,7 @@ const login = async (email, password) => {
 };
 
 const signup = async (name, email, password) => {
-  return axios.post(`${API_URL}/signup`, { name, email, password });
+  return api.post("/auth/signup", { name, email, password });
 };
 
 const logout = () => {

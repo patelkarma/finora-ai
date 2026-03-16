@@ -5,10 +5,12 @@ import api from "../../services/api";
 import { AuthContext } from "../../context/AuthContext";
 import logo from "../../assets/images/logo.png";
 import { FaArrowLeft } from "react-icons/fa";
+import { useNavigate } from "react-router-dom";
 import leftImage from "../../assets/images/img-2.avif";
 
 const Signup = () => {
   const { login } = useContext(AuthContext);
+  const navigate = useNavigate();
 
   const [step, setStep] = useState(1);
 
@@ -95,7 +97,7 @@ const Signup = () => {
       if (!token) throw new Error("Login failed after signup");
 
       login(user, token);
-      window.location.href = "/enter-salary";
+      navigate("/enter-salary");
     } catch (err) {
       const msg =
         err?.response?.data?.message ||

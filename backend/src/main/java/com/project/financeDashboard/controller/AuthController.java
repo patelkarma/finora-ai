@@ -20,6 +20,9 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.transaction.annotation.Transactional;
 
+import org.springframework.lang.NonNull;
+
+import java.security.SecureRandom;
 import java.time.LocalDateTime;
 import java.util.*;
 
@@ -27,11 +30,6 @@ import jakarta.servlet.http.HttpServletRequest;
 
 @RestController
 @RequestMapping("/api/auth")
-@CrossOrigin(origins = {
-        "https://finora-frontend-smoky.vercel.app",
-        "http://localhost:3000"
-})
-
 public class AuthController {
 
     private final UserService userService;
@@ -125,6 +123,13 @@ public class AuthController {
             if (uOpt.isPresent()) {
                 User user = uOpt.get();
 
+                if (user.getLockedUntil() != null && user.getLockedUntil().isAfter(LocalDateTime.now())) {
+                    LoginHistory lockHistory = createHistory(user.getId(), email, ip, ua, false);
+                    loginHistoryRepo.save(lockHistory);
+                    return ResponseEntity.status(429)
+                            .body(Map.of("message", "Account temporarily locked due to too many failed attempts. Please try again later."));
+                }
+
                 if (!user.isVerified()) {
                     return ResponseEntity.status(403)
                             .body(Map.of("message", "Please verify your email using OTP"));
@@ -150,14 +155,16 @@ public class AuthController {
             // reset failures
             userService.resetFailure(user);
 
-            loginHistoryRepo.save(createHistory(user.getId(), user.getEmail(), ip, ua, true));
+            LoginHistory successHistory = createHistory(user.getId(), user.getEmail(), ip, ua, true);
+            loginHistoryRepo.save(successHistory);
             Map<String, Object> resp = Map.of("token", jwt, "user",
                     Map.of("id", user.getId(), "name", user.getName(), "email", user.getEmail()));
             return ResponseEntity.ok(resp);
         } catch (Exception e) {
             // authentication failed: record failure
             uOpt.ifPresent(userService::recordFailedAttempt);
-            loginHistoryRepo.save(createHistory(uOpt.map(User::getId).orElse(null), email, ip, ua, false));
+            LoginHistory failHistory = createHistory(uOpt.map(User::getId).orElse(null), email, ip, ua, false);
+            loginHistoryRepo.save(failHistory);
             return ResponseEntity.status(401).body(Map.of("message", "Invalid email or password!"));
         }
     }
@@ -172,7 +179,7 @@ public class AuthController {
         email = email.trim().toLowerCase();
 
         // create code
-        String code = String.format("%06d", new Random().nextInt(999999));
+        String code = String.format("%06d", new SecureRandom().nextInt(1000000));
         LocalDateTime exp = LocalDateTime.now().plusMinutes(5);
 
         // delete previous and save new
@@ -275,9 +282,18 @@ public class AuthController {
 
     }
 
-    // get login history for a user
+    // get login history for the authenticated user only
     @GetMapping("/login-history/{userId}")
     public ResponseEntity<?> getLoginHistory(@PathVariable Long userId) {
+        var auth = org.springframework.security.core.context.SecurityContextHolder
+                .getContext().getAuthentication();
+        if (auth == null || !auth.isAuthenticated() || "anonymousUser".equals(auth.getPrincipal())) {
+            return ResponseEntity.status(401).body(Map.of("message", "Authentication required"));
+        }
+        Optional<User> authUserOpt = userRepository.findByEmail(auth.getName());
+        if (authUserOpt.isEmpty() || !authUserOpt.get().getId().equals(userId)) {
+            return ResponseEntity.status(403).body(Map.of("message", "Forbidden"));
+        }
         var list = loginHistoryRepo.findByUserIdOrderByTimestampDesc(userId);
         return ResponseEntity.ok(list);
     }
@@ -308,7 +324,7 @@ public class AuthController {
     }
 
     // helper
-    private LoginHistory createHistory(Long userId, String email, String ip, String ua, boolean success) {
+    private @NonNull LoginHistory createHistory(Long userId, String email, String ip, String ua, boolean success) {
         LoginHistory h = new LoginHistory();
         h.setUserId(userId);
         h.setEmail(email);

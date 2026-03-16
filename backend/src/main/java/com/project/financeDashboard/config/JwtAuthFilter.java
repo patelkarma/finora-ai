@@ -4,6 +4,7 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.lang.NonNull;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -17,7 +18,7 @@ import java.io.IOException;
 @Component
 public class JwtAuthFilter extends OncePerRequestFilter {
 
-    private final JwtUtil jwtUtil; // our helper class for JWT stuff
+    private final JwtUtil jwtUtil;
     private final UserDetailsService userDetailsService;
 
     public JwtAuthFilter(JwtUtil jwtUtil, UserDetailsService userDetailsService) {
@@ -26,13 +27,12 @@ public class JwtAuthFilter extends OncePerRequestFilter {
     }
 
     @Override
-    protected void doFilterInternal(HttpServletRequest request,
-            HttpServletResponse response,
-            FilterChain filterChain) throws ServletException, IOException {
+    protected void doFilterInternal(@NonNull HttpServletRequest request,
+            @NonNull HttpServletResponse response,
+            @NonNull FilterChain filterChain) throws ServletException, IOException {
 
         String path = request.getServletPath();
 
-        // 🚨 SKIP JWT FOR OAUTH & PASSWORD FLOW
         if (path.startsWith("/oauth2/") ||
                 path.startsWith("/login/oauth2/") ||
                 path.equals("/api/auth/set-password") ||
@@ -50,7 +50,7 @@ public class JwtAuthFilter extends OncePerRequestFilter {
             try {
                 username = jwtUtil.extractUsername(token);
             } catch (Exception e) {
-                System.out.println("Invalid JWT: " + e.getMessage());
+                // Invalid token — authentication will be skipped
             }
         }
 
@@ -68,5 +68,4 @@ public class JwtAuthFilter extends OncePerRequestFilter {
 
         filterChain.doFilter(request, response);
     }
-
 }

@@ -3,6 +3,7 @@ package com.project.financeDashboard.service;
 import com.project.financeDashboard.modal.Insight;
 import com.project.financeDashboard.modal.User;
 import com.project.financeDashboard.repository.InsightRepository;
+import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -19,7 +20,6 @@ public class InsightsService {
         this.ollamaService = ollamaService;
     }
 
-    // Generate using Ollama and save
     public Insight generateAndSaveAIInsight(User user, String prompt) {
         String aiResponse = ollamaService.generateInsightFromAI(prompt);
 
@@ -27,11 +27,10 @@ public class InsightsService {
         insight.setUser(user);
         insight.setMessage(aiResponse);
         insight.setRead(false);
-        // createdAt defaults to now if your entity does it; otherwise set explicitly
         return insightRepository.save(insight);
     }
 
-    public Insight saveInsight(Insight insight) {
+    public Insight saveInsight(@NonNull Insight insight) {
         return insightRepository.save(insight);
     }
 
@@ -43,7 +42,7 @@ public class InsightsService {
         return insightRepository.findByUserId(userId);
     }
 
-    public void markRead(Long id) {
+    public void markRead(@NonNull Long id) {
         Optional<Insight> opt = insightRepository.findById(id);
         opt.ifPresent(i -> {
             i.setRead(true);

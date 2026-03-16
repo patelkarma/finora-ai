@@ -3,6 +3,7 @@ package com.project.financeDashboard.service;
 import com.project.financeDashboard.modal.Budget;
 import com.project.financeDashboard.modal.User;
 import com.project.financeDashboard.repository.BudgetRepository;
+import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -17,18 +18,15 @@ public class BudgetService {
         this.budgetRepository = budgetRepository;
     }
 
-    // Get all budgets of a user
     public List<Budget> getBudgetsByUser(User user) {
         return budgetRepository.findByUser(user);
     }
 
-    // Find budget by ID
-    public Optional<Budget> findById(Long id) {
+    public Optional<Budget> findById(@NonNull Long id) {
         return budgetRepository.findById(id);
     }
 
-    // Save or update a budget
-    public Budget saveBudget(Budget budget) {
+    public Budget saveBudget(@NonNull Budget budget) {
         return budgetRepository.save(budget);
     }
 
@@ -36,8 +34,7 @@ public class BudgetService {
         return budgetRepository.findByUserId(userId);
     }
 
-    // Delete a budget by ID
-    public void deleteBudget(Long id) {
+    public void deleteBudget(@NonNull Long id) {
         budgetRepository.deleteById(id);
     }
 }

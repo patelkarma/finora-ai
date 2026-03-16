@@ -1,5 +1,6 @@
 import "bootstrap/dist/css/bootstrap.min.css";
 import React, { useState, useContext, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import "./Login.css";
 import api from "../../services/api";
 import { AuthContext } from "../../context/AuthContext";
@@ -9,6 +10,7 @@ import leftImage from "../../assets/images/img-2.avif";
 
 const Login = () => {
   const { login } = useContext(AuthContext);
+  const navigate = useNavigate();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -38,7 +40,7 @@ const Login = () => {
 
       localStorage.removeItem("oauth_email");
       login(user, token);
-      window.location.href = "/";
+      navigate("/dashboard");
     } catch (err) {
       setMessage(err?.response?.data?.message || "Invalid email or password");
     } finally {

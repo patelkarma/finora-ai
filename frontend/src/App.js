@@ -3,7 +3,6 @@ import React, { useContext } from "react";
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 
 import { AuthProvider, AuthContext } from "./context/AuthContext";
-import { TransactionProvider } from "./context/TransactionContext";
 
 import Navbar from "./components/Navbar/Navbar";
 
@@ -22,30 +21,30 @@ import "./App.css";
 
 // Protected Route
 const ProtectedRoute = ({ children }) => {
-  const { user } = useContext(AuthContext);
+  const { user, loading } = useContext(AuthContext);
+  if (loading) return null;
   return user ? children : <Navigate to="/login" replace />;
 };
 
 // Prevent logged-in users from visiting login/signup
 const PublicOnly = ({ children }) => {
-  const { user } = useContext(AuthContext);
+  const { user, loading } = useContext(AuthContext);
+  if (loading) return null;
   return user ? <Navigate to="/dashboard" replace /> : children;
 };
 
 function App() {
   return (
     <AuthProvider>
-      <TransactionProvider>
-        <Router>
-          <AuthWrapper />
-        </Router>
-      </TransactionProvider>
+      <Router>
+        <AuthWrapper />
+      </Router>
     </AuthProvider>
   );
 }
 
 const AuthWrapper = () => {
-  const { user } = useContext(AuthContext);
+  const { user, loading } = useContext(AuthContext);
 
   return (
     <>
@@ -68,10 +67,15 @@ const AuthWrapper = () => {
             <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
             <Route path="/ai-insights" element={<ProtectedRoute><AIInsights /></ProtectedRoute>} />
 
+            {/* Salary aliases → Profile */}
+            <Route path="/salary" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
+            <Route path="/enter-salary" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
+
             {/* Default */}
             <Route
               path="*"
               element={
+                loading ? null :
                 window.location.pathname.startsWith("/set-password")
                   ? <SetPassword />
                   : <Navigate to={user ? "/dashboard" : "/login"} replace />

@@ -5,6 +5,7 @@ import com.project.financeDashboard.modal.Role;
 import com.project.financeDashboard.modal.User;
 import com.project.financeDashboard.repository.RoleRepository;
 import com.project.financeDashboard.repository.UserRepository;
+import org.springframework.lang.NonNull;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -27,30 +28,25 @@ public class UserService {
         this.passwordEncoder = passwordEncoder;
     }
 
-    // Find user by ID
-    public Optional<User> findById(Long id) {
+    public Optional<User> findById(@NonNull Long id) {
         return userRepository.findById(id);
     }
 
-    // Update user info
-    public User updateUser(User user) {
+    public User updateUser(@NonNull User user) {
         return userRepository.save(user);
     }
 
-    public Optional<User> getUserById(Long id) {
+    public Optional<User> getUserById(@NonNull Long id) {
         return userRepository.findById(id);
     }
 
-    // Register/signup user with password hashing and assign ROLE_USER
     public User registerUser(String name, String email, String password) {
-
         User user = new User();
         user.setName(name.trim());
         user.setEmail(email.trim().toLowerCase());
         user.setPassword(passwordEncoder.encode(password));
 
-        // ✅ REQUIRED DEFAULTS
-        user.setVerified(true); // email verified via OTP
+        user.setVerified(true);
         user.setOauthUser(false);
         user.setPasswordSet(true);
         user.setProvider(AuthProvider.LOCAL);

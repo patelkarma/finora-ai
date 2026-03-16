@@ -5,16 +5,12 @@ import com.project.financeDashboard.modal.User;
 import com.project.financeDashboard.service.BudgetService;
 import com.project.financeDashboard.service.UserService;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Optional;
 
-@CrossOrigin(origins = {
-        "https://finora-frontend-smoky.vercel.app",
-        "https://finora-frontend-patelkarmas-projects.vercel.app",
-        "http://localhost:3000"
-})
 @RestController
 @RequestMapping("/api/budgets")
 public class BudgetController {
@@ -27,37 +23,48 @@ public class BudgetController {
         this.userService = userService;
     }
 
+    private Optional<User> getAuthenticatedUser() {
+        String email = SecurityContextHolder.getContext().getAuthentication().getName();
+        return userService.findByEmail(email);
+    }
+
     // Get all budgets for a user
     @GetMapping("/user/{userId}")
     public ResponseEntity<List<Budget>> getBudgetsByUser(@PathVariable Long userId) {
-        Optional<User> userOpt = userService.findById(userId);
-        if (userOpt.isEmpty()) {
-            return ResponseEntity.notFound().build();
+        Optional<User> authUser = getAuthenticatedUser();
+        if (authUser.isEmpty() || !authUser.get().getId().equals(userId)) {
+            return ResponseEntity.status(403).build();
         }
-        List<Budget> budgets = budgetService.getBudgetsByUser(userOpt.get());
+        List<Budget> budgets = budgetService.getBudgetsByUser(authUser.get());
         return ResponseEntity.ok(budgets);
     }
 
     // Add a new budget for a user
     @PostMapping("/user/{userId}")
     public ResponseEntity<Budget> addBudget(@PathVariable Long userId, @RequestBody Budget budget) {
-        Optional<User> userOpt = userService.findById(userId);
-        if (userOpt.isEmpty()) {
-            return ResponseEntity.notFound().build();
+        Optional<User> authUser = getAuthenticatedUser();
+        if (authUser.isEmpty() || !authUser.get().getId().equals(userId)) {
+            return ResponseEntity.status(403).build();
         }
-        budget.setUser(userOpt.get());
+        budget.setUser(authUser.get());
         Budget savedBudget = budgetService.saveBudget(budget);
         return ResponseEntity.ok(savedBudget);
     }
 
     // Update a budget
     @PutMapping("/{id}")
-    public ResponseEntity<Budget> updateBudget(@PathVariable Long id, @RequestBody Budget updatedBudget) {
+    public ResponseEntity<Budget> updateBudget(@PathVariable long id, @RequestBody Budget updatedBudget) {
         Optional<Budget> budgetOpt = budgetService.findById(id);
         if (budgetOpt.isEmpty()) {
             return ResponseEntity.notFound().build();
         }
+
+        Optional<User> authUser = getAuthenticatedUser();
         Budget budget = budgetOpt.get();
+        if (authUser.isEmpty() || !budget.getUser().getId().equals(authUser.get().getId())) {
+            return ResponseEntity.status(403).build();
+        }
+
         budget.setCategory(updatedBudget.getCategory());
         budget.setAmount(updatedBudget.getAmount());
         budget.setPeriod(updatedBudget.getPeriod());
@@ -67,11 +74,17 @@ public class BudgetController {
 
     // Delete a budget
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteBudget(@PathVariable Long id) {
+    public ResponseEntity<Void> deleteBudget(@PathVariable long id) {
         Optional<Budget> budgetOpt = budgetService.findById(id);
         if (budgetOpt.isEmpty()) {
             return ResponseEntity.notFound().build();
         }
+
+        Optional<User> authUser = getAuthenticatedUser();
+        if (authUser.isEmpty() || !budgetOpt.get().getUser().getId().equals(authUser.get().getId())) {
+            return ResponseEntity.status(403).build();
+        }
+
         budgetService.deleteBudget(id);
         return ResponseEntity.noContent().build();
     }

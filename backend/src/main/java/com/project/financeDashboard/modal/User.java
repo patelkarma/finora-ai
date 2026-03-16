@@ -6,7 +6,7 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.project.financeDashboard.modal.AuthProvider;
+import org.springframework.lang.NonNull;
 
 import java.time.LocalDateTime;
 import java.util.*;
@@ -75,6 +75,8 @@ public class User implements UserDetails {
 
     // ---------------- GETTERS / SETTERS ----------------
 
+    @NonNull
+    @SuppressWarnings("null") // id is set by DB on persist; always non-null for managed entities
     public Long getId() {
         return id;
     }

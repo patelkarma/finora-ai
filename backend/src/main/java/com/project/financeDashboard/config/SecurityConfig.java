@@ -1,5 +1,6 @@
 package com.project.financeDashboard.config;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpMethod;
 
 import org.springframework.context.annotation.Bean;
@@ -21,12 +22,14 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import java.util.Arrays;
 
-import com.project.financeDashboard.config.JwtAuthFilter;
 import com.project.financeDashboard.security.oauth.CustomOAuth2UserService;
 import com.project.financeDashboard.security.oauth.GoogleOAuth2SuccessHandler;
 
 @Configuration
 public class SecurityConfig {
+
+    @Value("${frontend.url}")
+    private String frontendUrl;
 
     private final JwtAuthFilter jwtAuthFilter;
     private final UserDetailsService userDetailsService;
@@ -37,32 +40,31 @@ public class SecurityConfig {
     }
 
     @Bean
-    public PasswordEncoder passwordEncoder() {
+    PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
 
     @Bean
-    public AuthenticationProvider authenticationProvider() {
-        DaoAuthenticationProvider provider = new DaoAuthenticationProvider();
-        provider.setUserDetailsService(userDetailsService);
+    AuthenticationProvider authenticationProvider() {
+        DaoAuthenticationProvider provider = new DaoAuthenticationProvider(userDetailsService);
         provider.setPasswordEncoder(passwordEncoder());
         return provider;
     }
 
     @Bean
-    public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
+    AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
         return config.getAuthenticationManager();
     }
 
     @Bean
-    public CorsConfigurationSource corsConfigurationSource() {
+    CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
         configuration.setAllowedOrigins(Arrays.asList(
                 "https://finora-frontend-smoky.vercel.app",
                 "https://finora-frontend-patelkarmas-projects.vercel.app",
                 "http://localhost:3000"));
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
-        configuration.setAllowedHeaders(Arrays.asList("*"));
+        configuration.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type", "Accept"));
         configuration.setAllowCredentials(true);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
@@ -71,7 +73,7 @@ public class SecurityConfig {
     }
 
     @Bean
-    public SecurityFilterChain filterChain(
+    SecurityFilterChain filterChain(
             HttpSecurity http,
             CustomOAuth2UserService customOAuth2UserService,
             GoogleOAuth2SuccessHandler googleOAuth2SuccessHandler) throws Exception {
@@ -80,7 +82,7 @@ public class SecurityConfig {
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll() // ⭐ IMPORTANT
+                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         .requestMatchers("/api/auth/**", "/", "/error").permitAll()
                         .requestMatchers("/oauth2/**").permitAll()
                         .anyRequest().authenticated())
@@ -90,7 +92,7 @@ public class SecurityConfig {
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
 
                 .oauth2Login(oauth -> oauth
-                        .loginPage("https://finora-frontend-patelkarmas-projects.vercel.app/login")
+                        .loginPage(frontendUrl + "/login")
                         .authorizationEndpoint(a -> a.baseUri("/oauth2/authorization"))
                         .redirectionEndpoint(r -> r.baseUri("/login/oauth2/code/*"))
                         .userInfoEndpoint(userInfo -> userInfo.userService(customOAuth2UserService))

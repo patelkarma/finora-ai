@@ -3,6 +3,7 @@ import api from "../services/api";
 
 export const AuthContext = createContext({
   user: null,
+  loading: true,
   login: () => { },
   loginWithToken: () => { },
   logout: () => { },
@@ -11,6 +12,7 @@ export const AuthContext = createContext({
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
 
   // ✅ Update user manually
   const updateUser = (updatedUser) => {
@@ -73,16 +75,19 @@ export const AuthProvider = ({ children }) => {
   // ✅ Restore session on reload
   useEffect(() => {
     const token = localStorage.getItem("token");
-    if (!token) return;
+    if (!token) {
+      setLoading(false);
+      return;
+    }
 
-    loginWithToken(token).catch(() => {
-      localStorage.removeItem("token");
-    });
+    loginWithToken(token)
+      .catch(() => { localStorage.removeItem("token"); })
+      .finally(() => setLoading(false));
   }, [loginWithToken]);
 
   // ⭐ IMPORTANT: return provider
   return (
-    <AuthContext.Provider value={{ user, login, loginWithToken, logout, updateUser }}>
+    <AuthContext.Provider value={{ user, loading, login, loginWithToken, logout, updateUser }}>
       {children}
     </AuthContext.Provider>
   );

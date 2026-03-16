@@ -5,16 +5,12 @@ import com.project.financeDashboard.modal.User;
 import com.project.financeDashboard.service.TransactionService;
 import com.project.financeDashboard.service.UserService;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Optional;
 
-@CrossOrigin(origins = {
-        "https://finora-frontend-smoky.vercel.app",
-        "https://finora-frontend-patelkarmas-projects.vercel.app",
-        "http://localhost:3000"
-})
 @RestController
 @RequestMapping("/api/transactions")
 public class TransactionController {
@@ -27,14 +23,19 @@ public class TransactionController {
         this.userService = userService;
     }
 
+    private Optional<User> getAuthenticatedUser() {
+        String email = SecurityContextHolder.getContext().getAuthentication().getName();
+        return userService.findByEmail(email);
+    }
+
     // Get all transactions for a user
     @GetMapping("/user/{userId}")
     public ResponseEntity<List<Transaction>> getTransactionsByUser(@PathVariable Long userId) {
-        Optional<User> userOpt = userService.findById(userId);
-        if (userOpt.isEmpty()) {
-            return ResponseEntity.notFound().build();
+        Optional<User> authUser = getAuthenticatedUser();
+        if (authUser.isEmpty() || !authUser.get().getId().equals(userId)) {
+            return ResponseEntity.status(403).build();
         }
-        List<Transaction> transactions = transactionService.getTransactionsByUser(userOpt.get());
+        List<Transaction> transactions = transactionService.getTransactionsByUser(authUser.get());
         return ResponseEntity.ok(transactions);
     }
 
@@ -42,26 +43,30 @@ public class TransactionController {
     @PostMapping("/user/{userId}")
     public ResponseEntity<Transaction> addTransaction(@PathVariable Long userId,
             @RequestBody Transaction transaction) {
-        Optional<User> userOpt = userService.findById(userId);
-        if (userOpt.isEmpty()) {
-            return ResponseEntity.notFound().build();
+        Optional<User> authUser = getAuthenticatedUser();
+        if (authUser.isEmpty() || !authUser.get().getId().equals(userId)) {
+            return ResponseEntity.status(403).build();
         }
-        transaction.setUser(userOpt.get());
+        transaction.setUser(authUser.get());
         Transaction saved = transactionService.saveTransaction(transaction);
         return ResponseEntity.ok(saved);
     }
 
-    // ✅ Update existing transaction
+    // Update existing transaction
     @PutMapping("/{id}")
-    public ResponseEntity<Transaction> updateTransaction(@PathVariable Long id,
+    public ResponseEntity<Transaction> updateTransaction(@PathVariable long id,
             @RequestBody Transaction updatedTransaction) {
         Optional<Transaction> existingOpt = transactionService.findById(id);
         if (existingOpt.isEmpty()) {
             return ResponseEntity.notFound().build();
         }
 
+        Optional<User> authUser = getAuthenticatedUser();
         Transaction existing = existingOpt.get();
-        existing.setUser(existing.getUser());
+        if (authUser.isEmpty() || !existing.getUser().getId().equals(authUser.get().getId())) {
+            return ResponseEntity.status(403).build();
+        }
+
         existing.setDescription(updatedTransaction.getDescription());
         existing.setAmount(updatedTransaction.getAmount());
         existing.setCategory(updatedTransaction.getCategory());
@@ -74,7 +79,17 @@ public class TransactionController {
 
     // Delete transaction by id
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteTransaction(@PathVariable Long id) {
+    public ResponseEntity<Void> deleteTransaction(@PathVariable long id) {
+        Optional<Transaction> existingOpt = transactionService.findById(id);
+        if (existingOpt.isEmpty()) {
+            return ResponseEntity.notFound().build();
+        }
+
+        Optional<User> authUser = getAuthenticatedUser();
+        if (authUser.isEmpty() || !existingOpt.get().getUser().getId().equals(authUser.get().getId())) {
+            return ResponseEntity.status(403).build();
+        }
+
         transactionService.deleteTransaction(id);
         return ResponseEntity.noContent().build();
     }
