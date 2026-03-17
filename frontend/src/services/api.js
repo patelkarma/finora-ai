@@ -6,6 +6,7 @@ const BASE = process.env.REACT_APP_API_URL || "https://finora-backend-rnd0.onren
 
 const api = axios.create({
   baseURL: BASE,
+  timeout: 20000,
   headers: {
     "Content-Type": "application/json",
   },

@@ -32,6 +32,8 @@ import jakarta.servlet.http.HttpServletRequest;
 @RequestMapping("/api/auth")
 public class AuthController {
 
+    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(AuthController.class);
+
     private final UserService userService;
     private final UserRepository userRepository;
     private final AuthenticationManager authenticationManager;
@@ -187,8 +189,14 @@ public class AuthController {
         OtpCode otp = new OtpCode(email, code, exp);
         otpRepo.save(otp);
 
-        // send email
-        mailService.sendOtp(email, code);
+        // send email — catch SMTP failures and surface a clear error
+        try {
+            mailService.sendOtp(email, code);
+        } catch (Exception e) {
+            log.error("[OTP] Failed to send email to {}: {}", email, e.getMessage());
+            return ResponseEntity.status(500)
+                    .body(Map.of("message", "Failed to send OTP email. Please try again later."));
+        }
 
         return ResponseEntity.ok(Map.of("message", "OTP sent", "resendCooldownSeconds", 15));
     }
