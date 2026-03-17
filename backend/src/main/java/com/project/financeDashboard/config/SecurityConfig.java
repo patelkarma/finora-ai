@@ -22,6 +22,7 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import java.util.Arrays;
 
 import com.project.financeDashboard.security.oauth.CustomOAuth2UserService;
+import com.project.financeDashboard.security.oauth.GoogleOAuth2FailureHandler;
 import com.project.financeDashboard.security.oauth.GoogleOAuth2SuccessHandler;
 
 @Configuration
@@ -76,6 +77,7 @@ public class SecurityConfig {
             HttpSecurity http,
             CustomOAuth2UserService customOAuth2UserService,
             GoogleOAuth2SuccessHandler googleOAuth2SuccessHandler,
+            GoogleOAuth2FailureHandler googleOAuth2FailureHandler,
             CustomAuthorizationRequestResolver customAuthorizationRequestResolver) throws Exception {
 
         http
@@ -97,7 +99,8 @@ public class SecurityConfig {
                                 .authorizationRequestResolver(customAuthorizationRequestResolver))
                         .redirectionEndpoint(r -> r.baseUri("/login/oauth2/code/*"))
                         .userInfoEndpoint(userInfo -> userInfo.userService(customOAuth2UserService))
-                        .successHandler(googleOAuth2SuccessHandler));
+                        .successHandler(googleOAuth2SuccessHandler)
+                        .failureHandler(googleOAuth2FailureHandler));
 
         return http.build();
     }
