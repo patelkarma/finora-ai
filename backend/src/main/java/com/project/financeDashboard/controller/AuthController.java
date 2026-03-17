@@ -313,13 +313,16 @@ public class AuthController {
         }
 
         return userRepository.findByEmail(email)
-                .map(user -> ResponseEntity.ok(Map.of(
-                        "id", user.getId(),
-                        "name", user.getName(),
-                        "email", user.getEmail(),
-                        "salary", user.getSalary(),
-                        "oauthUser", user.isOauthUser(),
-                        "passwordSet", user.isPasswordSet())))
+                .map(user -> {
+                    Map<String, Object> body = new HashMap<>();
+                    body.put("id", user.getId());
+                    body.put("name", user.getName());
+                    body.put("email", user.getEmail());
+                    body.put("salary", user.getSalary());
+                    body.put("oauthUser", user.isOauthUser());
+                    body.put("passwordSet", user.isPasswordSet());
+                    return ResponseEntity.ok(body);
+                })
                 .orElseGet(() -> ResponseEntity.status(404).body(Map.of("message", "User not found")));
     }
 

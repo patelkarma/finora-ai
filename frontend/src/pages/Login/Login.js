@@ -1,6 +1,6 @@
 import "bootstrap/dist/css/bootstrap.min.css";
 import React, { useState, useContext } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import "./Login.css";
 import api from "../../services/api";
 import { AuthContext } from "../../context/AuthContext";
@@ -16,7 +16,11 @@ const Login = () => {
   const [password, setPassword] = useState("");
   const [remember, setRemember] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [message, setMessage] = useState(null);
+  const [searchParams] = useSearchParams();
+  const oauthFailed = searchParams.get("oauth_error");
+  const [message, setMessage] = useState(
+    oauthFailed ? "Google login failed. Please try again." : null
+  );
 
   const handlePasswordLogin = async (e) => {
     e.preventDefault();
