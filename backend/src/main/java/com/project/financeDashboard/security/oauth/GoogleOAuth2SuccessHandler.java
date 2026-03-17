@@ -67,12 +67,6 @@ public class GoogleOAuth2SuccessHandler implements AuthenticationSuccessHandler 
 
         user = userRepository.saveAndFlush(user);
 
-        User verifyUser = userRepository.findByEmail(email).orElse(null);
-        if (verifyUser == null) {
-            response.sendRedirect(frontendUrl + "/login?db_error=true");
-            return;
-        }
-
         String token = jwtUtil.generateToken(user.getEmail());
 
         response.sendRedirect(frontendUrl + "/oauth-success?token=" + token);

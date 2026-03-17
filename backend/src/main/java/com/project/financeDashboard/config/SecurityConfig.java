@@ -10,7 +10,6 @@ import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
-import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -76,7 +75,8 @@ public class SecurityConfig {
     SecurityFilterChain filterChain(
             HttpSecurity http,
             CustomOAuth2UserService customOAuth2UserService,
-            GoogleOAuth2SuccessHandler googleOAuth2SuccessHandler) throws Exception {
+            GoogleOAuth2SuccessHandler googleOAuth2SuccessHandler,
+            CustomAuthorizationRequestResolver customAuthorizationRequestResolver) throws Exception {
 
         http
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
@@ -86,14 +86,15 @@ public class SecurityConfig {
                         .requestMatchers("/api/auth/**", "/", "/error").permitAll()
                         .requestMatchers("/oauth2/**").permitAll()
                         .anyRequest().authenticated())
-
-                .sessionManagement(sess -> sess.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                // NOTE: No sessionManagement override — IF_REQUIRED allows OAuth2 state storage
+                // JWT auth via JwtAuthFilter does not use sessions at all
                 .authenticationProvider(authenticationProvider())
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
-
                 .oauth2Login(oauth -> oauth
                         .loginPage(frontendUrl + "/login")
-                        .authorizationEndpoint(a -> a.baseUri("/oauth2/authorization"))
+                        .authorizationEndpoint(a -> a
+                                .baseUri("/oauth2/authorization")
+                                .authorizationRequestResolver(customAuthorizationRequestResolver))
                         .redirectionEndpoint(r -> r.baseUri("/login/oauth2/code/*"))
                         .userInfoEndpoint(userInfo -> userInfo.userService(customOAuth2UserService))
                         .successHandler(googleOAuth2SuccessHandler));

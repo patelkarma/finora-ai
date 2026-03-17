@@ -1,5 +1,5 @@
 import "bootstrap/dist/css/bootstrap.min.css";
-import React, { useState, useContext, useEffect } from "react";
+import React, { useState, useContext } from "react";
 import { useNavigate } from "react-router-dom";
 import "./Login.css";
 import api from "../../services/api";
@@ -18,11 +18,6 @@ const Login = () => {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState(null);
 
-  useEffect(() => {
-    const saved = localStorage.getItem("oauth_email");
-    if (saved) setEmail(saved);
-  }, []);
-
   const handlePasswordLogin = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -38,7 +33,6 @@ const Login = () => {
       if (remember) localStorage.setItem("remember", "1");
       else localStorage.removeItem("remember");
 
-      localStorage.removeItem("oauth_email");
       login(user, token);
       navigate("/dashboard");
     } catch (err) {
