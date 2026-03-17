@@ -84,7 +84,7 @@ export const AuthProvider = ({ children }) => {
 
     // On OAuth callback pages, clear any stale token and let the page handle its own auth
     const path = window.location.pathname;
-    if (path.startsWith('/oauth-success') || path.startsWith('/set-password')) {
+    if (path.startsWith('/oauth-success') || path.startsWith('/set-password') || path.startsWith('/create-password')) {
       localStorage.removeItem("token");
       setLoading(false);
       return;

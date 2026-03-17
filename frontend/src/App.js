@@ -55,6 +55,7 @@ const AuthWrapper = () => {
             {/* OAuth redirect page */}
             <Route path="/oauth-success" element={<OAuthSuccess />} />
             <Route path="/set-password" element={<SetPassword />} />
+            <Route path="/create-password" element={<SetPassword />} />
 
             {/* Public Routes */}
             <Route path="/login" element={<PublicOnly><Login /></PublicOnly>} />
@@ -76,7 +77,8 @@ const AuthWrapper = () => {
               path="*"
               element={
                 loading ? null :
-                window.location.pathname.startsWith("/set-password")
+                (window.location.pathname.startsWith("/set-password") ||
+                 window.location.pathname.startsWith("/create-password"))
                   ? <SetPassword />
                   : <Navigate to={user ? "/dashboard" : "/login"} replace />
               }
