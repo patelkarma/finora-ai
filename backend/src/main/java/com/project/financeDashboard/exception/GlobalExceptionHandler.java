@@ -61,6 +61,21 @@ public class GlobalExceptionHandler {
         return build(HttpStatus.BAD_REQUEST, ex.getMessage(), req, null);
     }
 
+    @ExceptionHandler(RateLimitExceededException.class)
+    public ResponseEntity<Map<String, Object>> handleRateLimit(RateLimitExceededException ex, WebRequest req) {
+        Map<String, String> details = new HashMap<>();
+        details.put("rule", ex.getRuleName());
+        details.put("retryAfterSeconds", String.valueOf(ex.getRetryAfterSeconds()));
+        ResponseEntity<Map<String, Object>> response =
+                build(HttpStatus.TOO_MANY_REQUESTS,
+                        "Too many requests — please slow down and try again shortly.",
+                        req, details);
+        // RFC 7231 §7.1.3 — Retry-After in seconds
+        return ResponseEntity.status(response.getStatusCode())
+                .header("Retry-After", String.valueOf(ex.getRetryAfterSeconds()))
+                .body(response.getBody());
+    }
+
     @ExceptionHandler(Exception.class)
     public ResponseEntity<Map<String, Object>> handleGeneric(Exception ex, WebRequest req) {
         log.error("Unhandled exception at {}", req.getDescription(false), ex);

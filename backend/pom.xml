@@ -135,6 +135,13 @@
     		<artifactId>spring-boot-starter-cache</artifactId>
 		</dependency>
 
+		<!-- Bucket4j: token-bucket rate limiting on auth + LLM endpoints -->
+		<dependency>
+    		<groupId>com.bucket4j</groupId>
+    		<artifactId>bucket4j-core</artifactId>
+    		<version>8.10.1</version>
+		</dependency>
+
 		<!-- Springdoc OpenAPI / Swagger UI (2.8.x is required for Spring Boot 3.5 / Spring Framework 6.2) -->
 		<dependency>
     		<groupId>org.springdoc</groupId>
