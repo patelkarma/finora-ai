@@ -4,8 +4,11 @@ import './index.css';
 import App from './App';
 import * as serviceWorkerRegistration from './serviceWorkerRegistration';
 import reportWebVitals from './reportWebVitals';
-import './assets/styles/bootstrap.min.css';
-import './assets/styles/main.css';
+// Bootstrap is still imported in App.js for unmigrated pages; no need to
+// duplicate it here. main.css was the legacy global theme that hard-coded
+// body { color: #212529; font-family: Roboto } and conflicted with the
+// new Tailwind/Geist design tokens — removing it. Migrated pages own
+// their styling; pages still on Bootstrap fall back to bootstrap defaults.
 // Sentry must initialize before any React render so it can capture
 // errors from the very first paint.
 import Sentry from './sentry';

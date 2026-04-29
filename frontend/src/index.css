@@ -101,18 +101,31 @@
   * {
     border-color: hsl(var(--border));
   }
-  body {
-    margin: 0;
-    background-color: hsl(var(--background));
-    color: hsl(var(--foreground));
-    font-family: 'Geist Sans', ui-sans-serif, system-ui, sans-serif;
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
-  }
   /* Tabular numerals on every <span class="num"> — finance UIs need
      numbers to right-align in stacks. */
   .num {
     font-family: 'Geist Mono', ui-monospace, monospace;
     font-variant-numeric: tabular-nums;
   }
+}
+
+/*
+ * Body-level theming lives OUTSIDE @layer base on purpose. Bootstrap is
+ * imported as an unlayered stylesheet (App.js → bootstrap.min.css) and
+ * sets body { color: var(--bs-body-color); font-family: ... }. Unlayered
+ * CSS always beats layered CSS — so my @layer base body rule was losing
+ * to Bootstrap and leaking #212529 onto every heading via inheritance.
+ *
+ * The fix: take body and html out of @layer base so the rule competes
+ * head-to-head with Bootstrap. Source order then determines the winner —
+ * since Bootstrap loads after index.css, raise specificity to html body
+ * (0,0,0,2) > body (0,0,0,1) so this rule still wins regardless of order.
+ */
+html body {
+  margin: 0;
+  background-color: hsl(var(--background));
+  color: hsl(var(--foreground));
+  font-family: 'Geist Sans', ui-sans-serif, system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
