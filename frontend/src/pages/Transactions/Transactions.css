@@ -4,12 +4,16 @@
   text-align: center;
 }
 
-h1 {
+/* Scoped to .transactions so these rules no longer leak globally
+   (the bare h1 selector was being beaten by Profile.css and Budgets.css
+   `h1 { ... !important }`, but the bare label selector was leaking the
+   serif font into every form on every page). */
+.transactions h1 {
   color: #000000;
   margin-bottom: 10px;
 }
 
-label {
+.transactions label {
   font-family: "Times New Roman", Times, serif;
   font-size: 22px;
   font-weight: 200;

@@ -2,7 +2,9 @@
   padding-top: 50px;
 }
 
-h1 {
+/* Scoped to .dashboard so the serif font + paddings don't leak into
+   every page that loads this stylesheet via App.js's global imports. */
+.dashboard h1 {
   font-weight: 700;
   font-family: "Times New Roman", Times, serif;
   padding-bottom: 20px;
@@ -74,7 +76,7 @@ h1 {
   }
 }
 
-h2 {
+.dashboard h2 {
   text-align: center;
   font-family: Cambria, Cochin, Georgia, Times, "Times New Roman", serif;
 }

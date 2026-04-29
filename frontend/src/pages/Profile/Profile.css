@@ -7,8 +7,11 @@
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
 
-h1 {
-  color: #000000 !important;
+/* Scoped to .profile so this rule no longer leaks into every page in
+   the bundle (it was overriding the auth screen heading via the global
+   stylesheet). */
+.profile h1 {
+  color: #000000;
   margin-bottom: 10px;
   text-align: center;
 }

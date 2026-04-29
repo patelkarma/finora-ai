@@ -3,8 +3,9 @@
   text-align: center;
 }
 
-h1 {
-  color: #000000 !important;
+/* Scoped to .budgets so this rule no longer leaks globally. */
+.budgets h1 {
+  color: #000000;
   margin-bottom: 20px;
 }
 
