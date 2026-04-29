@@ -159,7 +159,10 @@ const Dashboard = () => {
       // even if the HTTP status was 200 — refuse to advance the UI.
       console.log('[Dashboard] addTransaction response:', saved);
       if (!saved || typeof saved !== 'object' || !saved.id) {
-        throw new Error('Could not save income — the server returned an unexpected response.');
+        const sample = saved == null ? String(saved) :
+          typeof saved === 'string' ? `"${saved.slice(0, 80)}"` :
+          JSON.stringify(saved).slice(0, 120);
+        throw new Error(`Server returned an unexpected response (got ${sample}). Open the Network tab → POST /transactions/user/... → Response, and share what the body shows.`);
       }
 
       // Lock the gate open via the sticky ref so a subsequent refresh
