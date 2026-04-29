@@ -24,19 +24,23 @@ export function MoneyValue({
   const sign = num < 0 ? '-' : showSign === 'always' ? '+' : '';
   const formatted = abs.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
+  // Concatenate as a single string. JSX inserts whitespace between
+  // adjacent text expressions on separate lines, which would let the
+  // browser wrap "+₹70,000.00" at the space between `+` and `₹` and
+  // make stat cards different heights when the value has a sign.
+  const display = `${sign}${currency}${formatted}`;
+
   return (
     <span
       className={cn(
-        'num',
+        'num whitespace-nowrap',
         colorize && num < 0 && 'text-[hsl(var(--loss))]',
         colorize && num > 0 && 'text-[hsl(var(--gain))]',
         className
       )}
       {...rest}
     >
-      {sign}
-      {currency}
-      {formatted}
+      {display}
     </span>
   );
 }

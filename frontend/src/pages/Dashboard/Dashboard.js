@@ -450,11 +450,11 @@ function StatCard({ label, value, tone, accent, showSign, colorize, icon: Icon, 
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay, duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
       whileHover={{ y: -3 }}
-      className="group"
+      className="group h-full"
     >
       <Card
         className={cn(
-          'relative overflow-hidden transition-shadow duration-300',
+          'relative overflow-hidden transition-shadow duration-300 h-full flex flex-col justify-between',
           isBrand
             ? 'bg-brand-gradient text-white border-none shadow-xl shadow-primary/30 group-hover:shadow-2xl group-hover:shadow-primary/50'
             : 'group-hover:shadow-lg group-hover:shadow-black/5 dark:group-hover:shadow-black/30 group-hover:border-zinc-300 dark:group-hover:border-zinc-700'
@@ -483,12 +483,13 @@ function StatCard({ label, value, tone, accent, showSign, colorize, icon: Icon, 
               <Icon className={cn('h-4 w-4', isBrand && 'text-white')} />
             </div>
           </div>
-          <CardTitle className={cn('text-4xl md:text-[2.75rem] font-semibold tracking-tight leading-none', isBrand && 'text-white')}>
+          <CardTitle className={cn('text-3xl md:text-4xl font-semibold tracking-tight leading-tight truncate', isBrand && 'text-white')}>
             <MoneyValue
               value={value}
               showSign={showSign ? 'always' : 'never'}
               colorize={colorize && !isBrand}
               className={cn(
+                'truncate',
                 tone === 'gain' && !isBrand && 'text-[hsl(var(--gain))]',
                 tone === 'loss' && !isBrand && 'text-[hsl(var(--loss))]'
               )}
