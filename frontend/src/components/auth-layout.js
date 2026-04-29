@@ -2,6 +2,7 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { Sparkles } from 'lucide-react';
 import { ThemeToggle } from './theme-toggle';
+import { useTheme } from './theme-provider';
 
 /**
  * Shared shell for every auth screen. Replaces the old branding-image
@@ -12,6 +13,19 @@ import { ThemeToggle } from './theme-toggle';
  * indicator are optional.
  */
 export function AuthLayout({ title, subtitle, step, children }) {
+  const { theme } = useTheme();
+  // Hardcoded inline colors. This bypasses Tailwind class compilation, CSS
+  // variable resolution, and every cascade route. After multiple
+  // attempts at "the right way" failed in the user's local environment,
+  // these literal RGB values are guaranteed to render — JSX style props
+  // win over every CSS rule short of !important, and React always
+  // applies them.
+  const isLight = theme === 'light';
+  const titleColor = isLight ? '#0a0a0c' : '#fafafa';
+  const subtitleColor = isLight ? '#52525b' : '#a1a1aa';
+  const stepColor = isLight ? '#71717a' : '#71717a';
+  const cardBg = isLight ? 'rgba(255,255,255,0.75)' : 'rgba(20,20,23,0.78)';
+
   return (
     <div className="relative min-h-screen overflow-hidden bg-background text-foreground font-sans">
       {/* Animated gradient mesh background. Three blurred radial blobs
@@ -72,22 +86,39 @@ export function AuthLayout({ title, subtitle, step, children }) {
           transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
           className="w-full max-w-md"
         >
-          <div className="rounded-2xl border bg-card/80 backdrop-blur-xl shadow-2xl shadow-black/10 p-8 text-zinc-900 dark:text-zinc-50">
+          <div
+            className="rounded-2xl border backdrop-blur-xl shadow-2xl shadow-black/10 p-8"
+            style={{ backgroundColor: cardBg, color: titleColor }}
+          >
             <div className="mb-6 text-center">
-              {/* Hardcoded zinc-50/900 instead of text-foreground because the
-                  CSS-variable approach kept getting overridden by something
-                  in the Bootstrap chain on local dev. zinc utilities compile
-                  to plain rgb(...) — no variable resolution to lose. */}
-              <h1 className="text-2xl font-semibold tracking-tight font-sans text-zinc-900 dark:text-zinc-50">
+              <h1
+                className="text-2xl font-semibold tracking-tight"
+                style={{
+                  color: titleColor,
+                  fontFamily: '"Geist Sans", system-ui, -apple-system, "Segoe UI", sans-serif',
+                }}
+              >
                 {title}
               </h1>
               {subtitle && (
-                <p className="mt-1.5 text-sm font-sans text-zinc-600 dark:text-zinc-400">
+                <p
+                  className="mt-1.5 text-sm"
+                  style={{
+                    color: subtitleColor,
+                    fontFamily: '"Geist Sans", system-ui, -apple-system, "Segoe UI", sans-serif',
+                  }}
+                >
                   {subtitle}
                 </p>
               )}
               {step && (
-                <p className="mt-3 text-xs uppercase tracking-widest font-sans text-zinc-500 dark:text-zinc-500">
+                <p
+                  className="mt-3 text-xs uppercase tracking-widest"
+                  style={{
+                    color: stepColor,
+                    fontFamily: '"Geist Sans", system-ui, -apple-system, "Segoe UI", sans-serif',
+                  }}
+                >
                   {step}
                 </p>
               )}
