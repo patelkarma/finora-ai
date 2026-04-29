@@ -142,6 +142,18 @@
     		<version>8.10.1</version>
 		</dependency>
 
+		<!-- Sentry: error tracking + performance monitoring. SDK no-ops if SENTRY_DSN unset. -->
+		<dependency>
+    		<groupId>io.sentry</groupId>
+    		<artifactId>sentry-spring-boot-starter-jakarta</artifactId>
+    		<version>7.20.0</version>
+		</dependency>
+		<dependency>
+    		<groupId>io.sentry</groupId>
+    		<artifactId>sentry-logback</artifactId>
+    		<version>7.20.0</version>
+		</dependency>
+
 		<!-- Springdoc OpenAPI / Swagger UI (2.8.x is required for Spring Boot 3.5 / Spring Framework 6.2) -->
 		<dependency>
     		<groupId>org.springdoc</groupId>

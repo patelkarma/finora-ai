@@ -6,11 +6,24 @@ import * as serviceWorkerRegistration from './serviceWorkerRegistration';
 import reportWebVitals from './reportWebVitals';
 import './assets/styles/bootstrap.min.css';
 import './assets/styles/main.css';
+// Sentry must initialize before any React render so it can capture
+// errors from the very first paint.
+import Sentry from './sentry';
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
   <React.StrictMode>
-    <App />
+    <Sentry.ErrorBoundary
+      fallback={({ error, resetError }) => (
+        <div style={{ padding: 24, fontFamily: 'system-ui' }}>
+          <h2>Something broke.</h2>
+          <p>The team has been notified. Try reloading.</p>
+          <button onClick={resetError}>Try again</button>
+        </div>
+      )}
+    >
+      <App />
+    </Sentry.ErrorBoundary>
   </React.StrictMode>
 );
 
