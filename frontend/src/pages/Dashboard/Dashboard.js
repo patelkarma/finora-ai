@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useContext, useCallback, useMemo } from 'react';
+import React, { useEffect, useState, useContext, useCallback, useMemo, useRef } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import {
   ArrowDownRight,
@@ -44,6 +44,11 @@ const Dashboard = () => {
     transactionDate: new Date().toISOString().split('T')[0],
   });
   const [savingIncome, setSavingIncome] = useState(false);
+  // Once the user successfully saves their first income, we never want a
+  // subsequent refresh to flip incomeEntered back to false based on a
+  // stale response (cache lag, eventual consistency, etc.). This ref
+  // sticks for the lifetime of the component.
+  const incomeOnceSeen = useRef(false);
 
   const [modalOpen, setModalOpen] = useState(false);
   const [editing, setEditing] = useState(null);
@@ -58,7 +63,13 @@ const Dashboard = () => {
     if (!user) return;
     try {
       const data = await transactionService.getAllTransactions(user.id);
-      setIncomeEntered(data.some((t) => t.type === 'income'));
+      const hasIncome = data.some((t) => t.type === 'income');
+      // Sticky flag: once we've ever seen an income transaction, we
+      // never downgrade incomeEntered back to false based on a refresh
+      // response — backend caches / eventual consistency can briefly
+      // omit the just-saved transaction.
+      if (hasIncome) incomeOnceSeen.current = true;
+      setIncomeEntered(incomeOnceSeen.current || hasIncome);
       setTransactions(data);
 
       // Best-effort fetch for the most recent insight; non-blocking.
@@ -133,7 +144,7 @@ const Dashboard = () => {
 
     setSavingIncome(true);
     try {
-      await transactionService.addTransaction({
+      const saved = await transactionService.addTransaction({
         description: 'Monthly Income',
         amount,
         category: incomeForm.category.trim(),
@@ -141,10 +152,20 @@ const Dashboard = () => {
         type: 'income',
         userId: user.id,
       });
-      // Optimistic — flip the gate immediately, then refresh to pull the
-      // server-of-record list so the dashboard renders against real data.
+      // Lock the gate open via the sticky ref — even if the next refresh
+      // doesn't yet see this transaction (cache lag on Render), we won't
+      // bounce back to the welcome form.
+      incomeOnceSeen.current = true;
       setIncomeEntered(true);
-      await refresh();
+      // Seed local state with the saved transaction so the dashboard
+      // renders against real data immediately, without waiting for the
+      // next GET to hit a freshly-warmed cache.
+      if (saved && saved.id) {
+        setTransactions((prev) => [saved, ...prev]);
+      }
+      // Background refresh to pull anything else that may have changed
+      // (insights, other categories) — doesn't block the UI.
+      refresh();
     } catch (err) {
       console.error('Failed to save income:', err);
       const msg =
