@@ -20,8 +20,13 @@ const Login = () => {
   const [loading, setLoading] = useState(false);
 
   const oauthFailed = searchParams.get('oauth_error');
+  const sessionExpired = searchParams.get('session') === 'expired';
   const [message, setMessage] = useState(
-    oauthFailed ? 'Google login failed. Please try again.' : null
+    oauthFailed
+      ? 'Google login failed. Please try again.'
+      : sessionExpired
+      ? 'Your session expired. Please sign in again.'
+      : null
   );
 
   const handlePasswordLogin = async (e) => {
