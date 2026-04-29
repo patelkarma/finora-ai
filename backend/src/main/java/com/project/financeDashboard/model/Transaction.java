@@ -1,6 +1,11 @@
-package com.project.financeDashboard.modal;
+package com.project.financeDashboard.model;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.DecimalMin;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.Size;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 
@@ -20,18 +25,25 @@ public class Transaction {
     @JsonIgnore // Prevent serialization of lazy user
     private User user;
 
+    @NotNull(message = "Amount is required")
+    @DecimalMin(value = "0.01", message = "Amount must be greater than 0")
     @Column(nullable = false, precision = 15, scale = 2)
     private BigDecimal amount;
 
+    @Size(max = 50, message = "Category must be at most 50 characters")
     @Column(length = 50)
     private String category;
 
+    @NotBlank(message = "Type is required")
+    @Pattern(regexp = "income|expense", message = "Type must be either 'income' or 'expense'")
     @Column(length = 10, nullable = false)
-    private String type; // "income" or "expense"
+    private String type;
 
+    @Size(max = 255, message = "Description must be at most 255 characters")
     @Column(length = 255)
     private String description;
 
+    @NotNull(message = "Transaction date is required")
     @Column(name = "transaction_date", nullable = false)
     @com.fasterxml.jackson.annotation.JsonFormat(shape = com.fasterxml.jackson.annotation.JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")
     private LocalDate transactionDate;

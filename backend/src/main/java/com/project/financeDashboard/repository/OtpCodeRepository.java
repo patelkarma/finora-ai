@@ -1,6 +1,6 @@
 package com.project.financeDashboard.repository;
 
-import com.project.financeDashboard.modal.OtpCode;
+import com.project.financeDashboard.model.OtpCode;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.transaction.annotation.Transactional;

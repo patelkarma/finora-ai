@@ -1,9 +1,15 @@
 package com.project.financeDashboard.controller;
 
+import com.project.financeDashboard.dto.ForgotPasswordRequest;
 import com.project.financeDashboard.dto.LoginRequest;
-import com.project.financeDashboard.modal.LoginHistory;
-import com.project.financeDashboard.modal.OtpCode;
-import com.project.financeDashboard.modal.User;
+import com.project.financeDashboard.dto.ResetPasswordRequest;
+import com.project.financeDashboard.dto.SetPasswordRequest;
+import com.project.financeDashboard.dto.SignupRequest;
+import com.project.financeDashboard.service.PasswordResetService;
+import jakarta.validation.Valid;
+import com.project.financeDashboard.model.LoginHistory;
+import com.project.financeDashboard.model.OtpCode;
+import com.project.financeDashboard.model.User;
 import com.project.financeDashboard.repository.LoginHistoryRepository;
 import com.project.financeDashboard.repository.OtpCodeRepository;
 import com.project.financeDashboard.repository.UserRepository;
@@ -27,9 +33,11 @@ import java.time.LocalDateTime;
 import java.util.*;
 
 import jakarta.servlet.http.HttpServletRequest;
+import io.swagger.v3.oas.annotations.tags.Tag;
 
 @RestController
 @RequestMapping("/api/auth")
+@Tag(name = "Authentication", description = "Signup, login, OTP verification, OAuth callbacks, password setting")
 public class AuthController {
 
     private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(AuthController.class);
@@ -42,6 +50,7 @@ public class AuthController {
     private final OtpCodeRepository otpRepo;
     private final LoginHistoryRepository loginHistoryRepo;
     private final PasswordEncoder passwordEncoder;
+    private final PasswordResetService passwordResetService;
 
     public AuthController(UserService userService,
             UserRepository userRepository,
@@ -50,7 +59,8 @@ public class AuthController {
             MailService mailService,
             OtpCodeRepository otpRepo,
             LoginHistoryRepository loginHistoryRepo,
-            PasswordEncoder passwordEncoder) {
+            PasswordEncoder passwordEncoder,
+            PasswordResetService passwordResetService) {
 
         this.userService = userService;
         this.userRepository = userRepository;
@@ -60,23 +70,17 @@ public class AuthController {
         this.otpRepo = otpRepo;
         this.loginHistoryRepo = loginHistoryRepo;
         this.passwordEncoder = passwordEncoder;
+        this.passwordResetService = passwordResetService;
     }
 
-    // SIGNUP (unchanged, reuse existing)
+    // SIGNUP (validated via SignupRequest DTO)
     @PostMapping("/signup")
-    public ResponseEntity<?> signup(@RequestBody Map<String, String> body) {
+    public ResponseEntity<?> signup(@Valid @RequestBody SignupRequest body) {
 
-        String name = body.get("name");
-        String email = body.get("email");
-        String password = body.get("password");
-        String phone = body.get("phone");
-
-        if (email == null || password == null || name == null) {
-            return ResponseEntity.badRequest()
-                    .body(Map.of("message", "Name, email and password are required"));
-        }
-
-        email = email.trim().toLowerCase();
+        String name = body.getName();
+        String email = body.getEmail() == null ? "" : body.getEmail().trim().toLowerCase();
+        String password = body.getPassword();
+        String phone = body.getPhone();
 
         // ❌ Prevent duplicate users
         Optional<User> existing = userRepository.findByEmail(email);
@@ -115,7 +119,7 @@ public class AuthController {
 
     // LOGIN (password) with brute-force check + history
     @PostMapping("/login")
-    public ResponseEntity<?> login(@RequestBody LoginRequest loginRequest, HttpServletRequest request) {
+    public ResponseEntity<?> login(@Valid @RequestBody LoginRequest loginRequest, HttpServletRequest request) {
         String email = loginRequest.getEmail() == null ? "" : loginRequest.getEmail().trim().toLowerCase();
         Optional<User> uOpt = userRepository.findByEmail(email);
         String ip = request.getRemoteAddr();
@@ -204,20 +208,13 @@ public class AuthController {
     @PostMapping("/set-password")
     public ResponseEntity<?> setPassword(
             @RequestHeader("Authorization") String authHeader,
-            @RequestBody Map<String, String> body) {
+            @Valid @RequestBody SetPasswordRequest body) {
 
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
             return ResponseEntity.status(401).body(Map.of("message", "Missing token"));
         }
 
-        String password = body.get("password");
-        if (password == null || password.length() < 6) {
-            return ResponseEntity.badRequest()
-                    .body(Map.of("message", "Password must be at least 6 characters"));
-        }
-
         String token = authHeader.substring(7);
-
         String email;
         try {
             email = jwtUtil.extractUsername(token);
@@ -234,12 +231,30 @@ public class AuthController {
         User user = userRepository.findByEmail(email.toLowerCase())
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
-        user.setPassword(passwordEncoder.encode(password));
+        user.setPassword(passwordEncoder.encode(body.getPassword()));
         user.setPasswordSet(true);
 
         userRepository.save(user);
 
         return ResponseEntity.ok(Map.of("message", "Password set successfully"));
+    }
+
+    /** Always returns 200 to avoid email-enumeration attacks. */
+    @PostMapping("/forgot-password")
+    public ResponseEntity<?> forgotPassword(@Valid @RequestBody ForgotPasswordRequest body) {
+        passwordResetService.requestReset(body.getEmail());
+        return ResponseEntity.ok(Map.of(
+                "message", "If an account exists for this email, a reset link has been sent."));
+    }
+
+    @PostMapping("/reset-password")
+    public ResponseEntity<?> resetPassword(@Valid @RequestBody ResetPasswordRequest body) {
+        boolean ok = passwordResetService.consumeReset(body.getToken(), body.getPassword());
+        if (!ok) {
+            return ResponseEntity.status(400)
+                    .body(Map.of("message", "Reset link is invalid or has expired"));
+        }
+        return ResponseEntity.ok(Map.of("message", "Password reset successfully"));
     }
 
     // VERIFY OTP

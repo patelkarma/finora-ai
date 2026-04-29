@@ -1,4 +1,4 @@
-package com.project.financeDashboard.modal;
+package com.project.financeDashboard.model;
 
 import jakarta.persistence.*;
 import java.time.LocalDateTime;

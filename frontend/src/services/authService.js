@@ -15,6 +15,14 @@ const signup = async (name, email, password) => {
   return api.post("/auth/signup", { name, email, password });
 };
 
+const forgotPassword = async (email) => {
+  return api.post("/auth/forgot-password", { email });
+};
+
+const resetPassword = async (token, password) => {
+  return api.post("/auth/reset-password", { token, password });
+};
+
 const logout = () => {
   localStorage.removeItem("token");
   localStorage.removeItem("user");
@@ -31,9 +39,13 @@ const getCurrentUser = () => {
   }
 };
 
-export default {
+const authService = {
   login,
   signup,
+  forgotPassword,
+  resetPassword,
   logout,
   getCurrentUser,
 };
+
+export default authService;

@@ -1,7 +1,7 @@
 package com.project.financeDashboard.repository;
 
-import com.project.financeDashboard.modal.Budget;
-import com.project.financeDashboard.modal.User;
+import com.project.financeDashboard.model.Budget;
+import com.project.financeDashboard.model.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import java.util.List;
 

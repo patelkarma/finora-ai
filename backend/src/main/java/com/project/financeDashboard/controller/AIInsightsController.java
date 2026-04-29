@@ -1,15 +1,17 @@
 package com.project.financeDashboard.controller;
 
-import com.project.financeDashboard.modal.Insight;
-import com.project.financeDashboard.modal.User;
+import com.project.financeDashboard.model.Insight;
+import com.project.financeDashboard.model.User;
 import com.project.financeDashboard.service.*;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import java.util.*;
 
 @RestController
 @RequestMapping("/api/ai")
+@Tag(name = "AI Insights", description = "Generate and retrieve LLM-powered financial insights")
 public class AIInsightsController {
 
     private final InsightsService insightsService;

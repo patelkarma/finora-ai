@@ -1,7 +1,7 @@
 package com.project.financeDashboard.security.oauth;
 
-import com.project.financeDashboard.modal.User;
-import com.project.financeDashboard.modal.AuthProvider;
+import com.project.financeDashboard.model.User;
+import com.project.financeDashboard.model.AuthProvider;
 import com.project.financeDashboard.repository.UserRepository;
 import com.project.financeDashboard.config.JwtUtil;
 import jakarta.servlet.http.HttpServletRequest;

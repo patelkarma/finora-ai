@@ -1,17 +1,27 @@
-package com.project.financeDashboard.service;
+package com.project.financeDashboard.service.llm;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.http.*;
-import org.springframework.stereotype.Service;
+import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
 
 import java.util.HashMap;
 import java.util.Map;
 
-@Service
-public class OllamaService {
+/**
+ * Local Ollama provider (zero-cost, runs against an Ollama server on localhost
+ * or an internal address). Active when {@code llm.provider=ollama}.
+ */
+@Component
+@ConditionalOnProperty(name = "llm.provider", havingValue = "ollama")
+public class OllamaLlmProvider implements LlmProvider {
+
+    private static final Logger log = LoggerFactory.getLogger(OllamaLlmProvider.class);
 
     @Value("${ollama.url:http://localhost:11434}")
     private String ollamaUrl;
@@ -22,11 +32,12 @@ public class OllamaService {
     private final RestTemplate restTemplate;
     private final ObjectMapper mapper = new ObjectMapper();
 
-    public OllamaService(RestTemplate restTemplate) {
+    public OllamaLlmProvider(RestTemplate restTemplate) {
         this.restTemplate = restTemplate;
     }
 
-    public String generateInsightFromAI(String prompt) {
+    @Override
+    public String generate(String prompt) {
         try {
             Map<String, Object> body = new HashMap<>();
             body.put("model", model);
@@ -34,25 +45,21 @@ public class OllamaService {
 
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_JSON);
-
-            // ✅ Proper JSON serialization
-            String jsonBody = mapper.writeValueAsString(body);
-            HttpEntity<String> request = new HttpEntity<>(jsonBody, headers);
+            HttpEntity<String> request = new HttpEntity<>(mapper.writeValueAsString(body), headers);
 
             ResponseEntity<String> response = restTemplate.postForEntity(
                     ollamaUrl + "/api/generate", request, String.class);
 
             if (response.getStatusCode() != HttpStatus.OK) {
-                return "❌ Error contacting Ollama: " + response.getStatusCode() +
-                        " on POST request for \"" + ollamaUrl + "/api/generate\"";
+                throw new LlmUnavailableException("Ollama HTTP " + response.getStatusCode());
             }
 
             String responseBody = response.getBody();
             if (responseBody == null || responseBody.isBlank()) {
-                return "⚠️ Empty response from Ollama.";
+                throw new LlmUnavailableException("Ollama returned an empty response");
             }
 
-            // ✅ Ollama streams multiple JSON objects per line; extract "response" fields
+            // Ollama streams multiple JSON objects per line; concatenate "response" fields
             StringBuilder result = new StringBuilder();
             for (String line : responseBody.split("\n")) {
                 if (!line.trim().isEmpty()) {
@@ -62,12 +69,21 @@ public class OllamaService {
                     }
                 }
             }
-
-            return result.length() > 0 ? result.toString().trim() : "⚠️ No response text found.";
-
+            String text = result.toString().trim();
+            if (text.isEmpty()) {
+                throw new LlmUnavailableException("Ollama produced no response text");
+            }
+            return text;
+        } catch (LlmUnavailableException e) {
+            throw e;
         } catch (Exception e) {
-            e.printStackTrace();
-            return "❌ Error contacting Ollama: " + e.getMessage();
+            log.warn("Ollama call failed: {}", e.getMessage());
+            throw new LlmUnavailableException("Ollama call failed: " + e.getMessage(), e);
         }
+    }
+
+    @Override
+    public String name() {
+        return "ollama";
     }
 }

@@ -1,18 +1,21 @@
 package com.project.financeDashboard.controller;
 
-import com.project.financeDashboard.modal.Budget;
-import com.project.financeDashboard.modal.User;
+import com.project.financeDashboard.model.Budget;
+import com.project.financeDashboard.model.User;
 import com.project.financeDashboard.service.BudgetService;
 import com.project.financeDashboard.service.UserService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 
 import java.util.List;
 import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/budgets")
+@Tag(name = "Budgets", description = "Manage user budget limits per category")
 public class BudgetController {
 
     private final BudgetService budgetService;
@@ -41,7 +44,7 @@ public class BudgetController {
 
     // Add a new budget for a user
     @PostMapping("/user/{userId}")
-    public ResponseEntity<Budget> addBudget(@PathVariable Long userId, @RequestBody Budget budget) {
+    public ResponseEntity<Budget> addBudget(@PathVariable Long userId, @Valid @RequestBody Budget budget) {
         Optional<User> authUser = getAuthenticatedUser();
         if (authUser.isEmpty() || !authUser.get().getId().equals(userId)) {
             return ResponseEntity.status(403).build();
@@ -53,7 +56,7 @@ public class BudgetController {
 
     // Update a budget
     @PutMapping("/{id}")
-    public ResponseEntity<Budget> updateBudget(@PathVariable long id, @RequestBody Budget updatedBudget) {
+    public ResponseEntity<Budget> updateBudget(@PathVariable long id, @Valid @RequestBody Budget updatedBudget) {
         Optional<Budget> budgetOpt = budgetService.findById(id);
         if (budgetOpt.isEmpty()) {
             return ResponseEntity.notFound().build();

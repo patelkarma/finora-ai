@@ -15,6 +15,8 @@ import Profile from "./pages/Profile/Profile";
 import AIInsights from "./pages/AIInsights/AIInsights";
 import OAuthSuccess from "./pages/OAuth/OAuthSuccess";
 import SetPassword from "./pages/SetPassword/SetPassword";
+import ForgotPassword from "./pages/ForgotPassword/ForgotPassword";
+import ResetPassword from "./pages/ResetPassword/ResetPassword";
 
 
 import "./App.css";
@@ -60,6 +62,8 @@ const AuthWrapper = () => {
             {/* Public Routes */}
             <Route path="/login" element={<PublicOnly><Login /></PublicOnly>} />
             <Route path="/signup" element={<PublicOnly><Signup /></PublicOnly>} />
+            <Route path="/forgot-password" element={<PublicOnly><ForgotPassword /></PublicOnly>} />
+            <Route path="/reset-password" element={<ResetPassword />} />
 
             {/* Protected Routes */}
             <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />

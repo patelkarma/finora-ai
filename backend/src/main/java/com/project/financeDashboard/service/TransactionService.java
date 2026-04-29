@@ -1,7 +1,7 @@
 package com.project.financeDashboard.service;
 
-import com.project.financeDashboard.modal.Transaction;
-import com.project.financeDashboard.modal.User;
+import com.project.financeDashboard.model.Transaction;
+import com.project.financeDashboard.model.User;
 import com.project.financeDashboard.repository.TransactionRepository;
 import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Service;

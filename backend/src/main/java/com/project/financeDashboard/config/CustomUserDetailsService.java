@@ -1,6 +1,6 @@
 package com.project.financeDashboard.config;
 
-import com.project.financeDashboard.modal.User;
+import com.project.financeDashboard.model.User;
 import com.project.financeDashboard.repository.UserRepository;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;

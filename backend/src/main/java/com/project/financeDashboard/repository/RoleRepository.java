@@ -1,7 +1,7 @@
 
 package com.project.financeDashboard.repository;
 
-import com.project.financeDashboard.modal.Role;
+import com.project.financeDashboard.model.Role;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.Optional;

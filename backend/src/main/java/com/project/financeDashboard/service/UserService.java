@@ -1,8 +1,8 @@
 package com.project.financeDashboard.service;
 
-import com.project.financeDashboard.modal.AuthProvider;
-import com.project.financeDashboard.modal.Role;
-import com.project.financeDashboard.modal.User;
+import com.project.financeDashboard.model.AuthProvider;
+import com.project.financeDashboard.model.Role;
+import com.project.financeDashboard.model.User;
 import com.project.financeDashboard.repository.RoleRepository;
 import com.project.financeDashboard.repository.UserRepository;
 import org.springframework.lang.NonNull;

@@ -1,193 +1,226 @@
-# 🚀 Finora AI – Personal Finance Dashboard
+# Finora — AI-powered personal finance dashboard
 
-- Finora AI is a production-oriented personal finance dashboard built with React.js that helps users track expenses, manage budgets, and gain AI-powered financial insights.
-The project focuses on real-world frontend architecture, secure authentication flows, and seamless frontend–backend integration.
+> A full-stack personal-finance app: track transactions, set budgets, and get LLM-generated financial insights against your own data. Built to demonstrate production-grade Spring Boot + React patterns — JWT + OAuth2 + OTP auth, Flyway-managed schema, circuit-breaker-protected LLM calls, validated REST APIs documented with OpenAPI.
 
-- ⚡ This project is demonstrated via localhost, with a full video walkthrough included below.
+[![Live Demo](https://img.shields.io/badge/demo-live-success?style=flat-square)](https://finora-frontend.vercel.app)
+[![Swagger](https://img.shields.io/badge/api-docs-blue?style=flat-square)](https://finora-backend-rnd0.onrender.com/swagger-ui.html)
+[![Health](https://img.shields.io/badge/health-/actuator/health-success?style=flat-square)](https://finora-backend-rnd0.onrender.com/actuator/health)
+[![Backend CI](https://img.shields.io/github/actions/workflow/status/patelkarma/finora-ai/backend-ci.yml?branch=main&label=backend%20CI&style=flat-square)](.github/workflows/backend-ci.yml)
+[![Frontend CI](https://img.shields.io/github/actions/workflow/status/patelkarma/finora-ai/frontend-ci.yml?branch=main&label=frontend%20CI&style=flat-square)](.github/workflows/frontend-ci.yml)
 
-# 🎥 Demo Video (Recommended)
+> ⚠️ **Update the badge URLs and the live link above** to your real Vercel/Render URLs after the next deploy. Placeholders are wired to the existing `finora-frontend.vercel.app` / `finora-backend-rnd0.onrender.com` hosts.
 
-### 📽️ Full Application Walkthrough
-👉 [![Finora AI Demo](public/assets/Demo-thumbnail.png)](https://drive.google.com/file/d/1cMHvQLAYtFIVnkXjUNp26HraZh34hTsA/view?usp=sharing)
+---
 
-### The demo covers:
+## Live demo
 
-- Authentication (Google OAuth & OTP login)
+- **Frontend:** https://finora-frontend.vercel.app
+- **API (Swagger UI):** https://finora-backend-rnd0.onrender.com/swagger-ui.html
+- **Health probe:** https://finora-backend-rnd0.onrender.com/actuator/health
 
-- Dashboard loading with API-driven data
+> Render's free tier sleeps the backend after ~15 minutes of inactivity. The first request after a sleep can take 30–60 s to wake the dyno; subsequent calls are instant.
 
-- Expense and budget views
+---
 
-- AI-powered financial insights
+## Highlights
 
-- Frontend architecture overview
+- **Auth depth** — email + password with BCrypt, Google OAuth2, email OTP signup verification, brute-force lockout (5 failures → 15 min), single-use SHA-256-hashed password-reset tokens
+- **Vendor-neutral LLM layer** — `LlmProvider` interface with two implementations (Google Gemini Flash, local Ollama). Selected at boot via `llm.provider`. Wrapped with Resilience4j circuit breaker + retry, fails over to a graceful fallback message instead of a 500
+- **Schema-managed** — Flyway migrations, `ddl-auto=validate` so Hibernate never silently mutates the live database
+- **Self-documenting API** — Springdoc OpenAPI generates `/v3/api-docs`, browsable Swagger UI with bearer-JWT auth scheme
+- **Validated everywhere** — Bean Validation on every request DTO with field-level error responses (`{"fields": {"email": "..."}}`)
+- **Observable** — Spring Boot Actuator with public health/info endpoints; structured `RestControllerAdvice` error envelope; SLF4J logging
+- **Tested** — JUnit 5 + Mockito unit tests for services + a Spring Boot context-load test against an in-memory H2 DB; `./mvnw test` runs in ~35 s
 
-# 🧠 Why This Project Matters
+---
 
-- Unlike basic CRUD applications, Finora AI is designed as a realistic finance application with:
+## Architecture
 
-- Secure authentication flows
+```mermaid
+flowchart LR
+    subgraph Client
+        UI["React 18 SPA<br/>(Vercel)"]
+    end
+    subgraph "Spring Boot 3.5 — backend (Render)"
+        SEC[Spring Security<br/>JWT + OAuth2]
+        CTL[Controllers<br/>+ Bean Validation]
+        SVC[Services]
+        LLM["LlmService<br/>+ Circuit Breaker"]
+        FW[Flyway]
+    end
+    DB[(Postgres 15<br/>Supabase)]
+    GEM[(Gemini API)]
+    OLL[(Ollama<br/>local dev)]
+    GMAIL[(Gmail SMTP<br/>OTP + reset emails)]
+    GOOG[(Google OAuth2)]
 
-- Protected routes
+    UI -- HTTPS + JWT --> SEC --> CTL --> SVC
+    SVC --> DB
+    FW -. owns schema .-> DB
+    SVC --> LLM
+    LLM -- "llm.provider=gemini (default)" --> GEM
+    LLM -. "llm.provider=ollama" .-> OLL
+    SVC --> GMAIL
+    UI -. OAuth login .-> GOOG --> SEC
+```
 
-- API-driven dashboards
+### OTP signup flow
 
-- AI-powered insights
+```mermaid
+sequenceDiagram
+    participant U as User (browser)
+    participant API as Backend
+    participant DB as Postgres
+    participant SMTP as Gmail SMTP
 
-- A scalable, production-focused architecture mindset
+    U->>API: POST /api/auth/request-otp { email }
+    API->>DB: deleteByEmail; INSERT otp_codes (code, expires_at = now+5m)
+    API->>SMTP: send 6-digit code
+    API-->>U: 200 { resendCooldownSeconds: 15 }
+    U->>API: POST /api/auth/verify-otp { email, code }
+    API->>DB: SELECT latest otp; check expiry & match
+    API->>DB: UPDATE users SET verified=true
+    API-->>U: 200 { message: "Email verified" }
+    U->>API: POST /api/auth/signup { name, email, password }
+    API-->>U: 200 { message: "Account created" }
+```
 
-- This project reflects how modern production frontend systems are actually built.
+### AI insight generation (with circuit breaker)
 
-# 🛠️ Tech Stack
+```mermaid
+sequenceDiagram
+    participant U as User
+    participant API as AIInsightsController
+    participant SVC as InsightsService
+    participant LS as LlmService<br/>(Resilience4j)
+    participant P as LlmProvider<br/>(Gemini / Ollama)
+    participant DB as Postgres
 
-### Frontend
+    U->>API: POST /api/ai/insights/generate?userId=...
+    API->>SVC: build prompt from txns + budgets
+    SVC->>LS: generate(prompt)
+    alt Circuit closed
+        LS->>P: HTTP call (with @Retry, max 2 attempts)
+        P-->>LS: completion text
+    else Circuit open / failure
+        LS-->>SVC: fallback message ("AI temporarily unavailable…")
+    end
+    SVC->>DB: INSERT INTO insights (...)
+    SVC-->>API: Insight
+    API-->>U: 200 { id, message, createdAt, ... }
+```
 
-- React.js
-- Context API (Global state management)
-- JavaScript (ES6+)
-- Bootstrap
-- HTML5 & CSS3
+---
+
+## Tech stack
+
+| Layer | Choice | Why |
+|---|---|---|
+| Frontend | React 18, React Router 7, Bootstrap 5, Chart.js | Familiar, productive; Bootstrap → Tailwind/shadcn migration scheduled for Phase 2 |
+| Backend | Spring Boot 3.5 (Java 17) | Mature, security-first, hireable |
+| DB | Postgres 15 (Supabase) + Flyway | Relational, ACID, professional schema management |
+| Auth | JWT (jjwt) + OAuth2 (Spring Security) + email OTP | Stateless, mobile-friendly, real-world auth surfaces |
+| API docs | Springdoc OpenAPI / Swagger UI | Auto-generated, browsable, recruiter-shareable |
+| Resilience | Resilience4j (circuit breaker + retry) | Fault-isolation around the LLM call |
+| LLM | Google Gemini 2.0 Flash (free tier) with local Ollama fallback | Free; provider-neutral interface |
+| Validation | Jakarta Bean Validation | Field-level error envelope |
+| Observability | Spring Boot Actuator | `/actuator/health` for Render probes, `/actuator/info` for build metadata |
+| Tests | JUnit 5, Mockito, AssertJ, H2 in-memory | Fast, no external deps |
+| Hosting | Vercel (FE) · Render (BE) · Supabase (Postgres) — all free tier | Zero-cost deploy story |
+| CI/CD | GitHub Actions → Maven build & test → Render deploy webhook | Deploy on every green main push |
+
+---
+
+## Quick start
+
+### Prerequisites
+- Java 17 · Maven (uses bundled `./mvnw`)
+- Node 20 · npm
+- Postgres 15 *or* a free [Supabase](https://supabase.com) project (recommended), *or* Docker (`docker run -p 5432:5432 -e POSTGRES_PASSWORD=postgres -e POSTGRES_DB=finora postgres:15`)
+- A free [Gemini API key](https://aistudio.google.com/apikey) (or run [Ollama](https://ollama.com) locally with `ollama pull mistral:7b`)
 
 ### Backend
 
-- Spring Boot (AI-assisted development)
-- RESTful APIs
-- OAuth & OTP-based authentication flows
-- AI Integration
-- Ollama (Local LLM) for AI-powered financial insights
-- Architecture designed for easy migration to cloud-based LLMs
+```bash
+cd backend
+cp .env.example .env       # fill in real values
+./mvnw spring-boot:run     # localhost:8081
+```
 
-# Tools & Deployment :- 
+Then open:
+- API: http://localhost:8081/swagger-ui.html
+- Health: http://localhost:8081/actuator/health
 
-- Git & GitHub
-- npm
-- Vercel (frontend deployment-ready)
-- Chrome DevTools
+### Frontend
 
-# ✨ Key Features
+```bash
+cd frontend
+cp .env.example .env       # set REACT_APP_API_URL=http://localhost:8081/api
+npm install
+npm start                  # localhost:3000
+```
 
-### 🔐 Authentication
+### Tests
 
-- Google OAuth login
+```bash
+cd backend
+./mvnw test                # 25 tests, ~35s
+```
 
-- OTP-based email authentication
+---
 
-- Protected routes and session handling
+## Project layout
 
-### 📊 Dashboard
+```
+backend/
+  src/main/java/com/project/financeDashboard/
+    config/        Spring Security, JWT, OpenAPI, RestTemplate, Auth helpers
+    controller/    REST endpoints (Authentication, Transactions, Budgets, AI Insights, Users)
+    dto/           Request/response DTOs with Jakarta validation
+    exception/     GlobalExceptionHandler — uniform JSON error envelope
+    model/         JPA entities
+    repository/    Spring Data JPA repos
+    security/oauth/   Google OAuth2 success/failure handlers, custom resolver
+    service/
+      llm/         LlmProvider interface + Gemini & Ollama impls + LlmService (circuit breaker)
+      ...          UserService, TransactionService, BudgetService, InsightsService, MailService, PasswordResetService
+    validation/    @StrongPassword annotation + validator
+  src/main/resources/
+    application.properties
+    db/migration/  Flyway V1__init_schema.sql, V2__add_password_reset_tokens.sql
+  src/test/...     JUnit 5 + Mockito tests, application-test.properties (H2)
 
-- Expense tracking
+frontend/
+  src/
+    pages/         Dashboard, Transactions, Budgets, AIInsights, Profile,
+                   Login, Signup, OAuth, SetPassword, ForgotPassword, ResetPassword
+    components/    Navbar, TransactionList/Item, BudgetList/Item, Chart, Modal, ...
+    context/       AuthContext (global auth state + JWT-aware session restore)
+    services/      api.js (axios + JWT interceptor), authService, transactionService, budgetService, aiService
+```
 
-- Budget monitoring
+---
 
-- Financial summaries
+## Roadmap
 
-- API-driven dynamic data rendering
+This is Phase 1. The full plan tracks toward a portfolio piece for backend/microservices roles:
 
-### 🤖 AI Financial Insights
+- **Phase 1 (this release)** — Quick wins: OpenAPI, Actuator, Bean Validation, password policy + reset, LLM provider abstraction with circuit breaker, Flyway, real tests, env examples ✅
+- **Phase 2** — Redis caching (cache-aside on hot reads + LLM response cache), Bucket4j rate limiting, WebSocket push for new insights, pagination + composite indexes, Tailwind + shadcn UI migration, Sentry, k6 load tests
+- **Phase 3** — Conversational AI assistant with SSE streaming, RAG over user transactions (pgvector + Gemini embeddings), recurring-subscription detector, anomaly detection, cash-flow forecasting, separate `ai-service` microservice over RabbitMQ
+- **Phase 4** — ADRs, Mermaid sequence diagrams, performance numbers in README, demo Loom
 
-- Personalized insights generated using a local LLM
+---
 
-- Clean separation between AI logic and UI
+## What I learned
 
-- Future-ready design for cloud AI integration
+- Designing a vendor-neutral LLM abstraction so the production LLM can be swapped without touching business logic
+- Adopting Flyway against a database that was previously schema-managed by `ddl-auto=update` without losing data
+- Returning structured field-level error envelopes from `@RestControllerAdvice` for a smoother frontend integration
+- Why the circuit-breaker → fallback pattern matters more than retries alone when the upstream is a paid/quota'd API
 
-### 🧩 Architecture
+---
 
-- Modular React component structure
+## Author
 
-- Dedicated API service layer
-
-- Global state management using Context API
-
-- Clean separation of UI, logic, and data flow
-
-# 🏗️ System Architecture Overview
-### Frontend (React)
- - Components (Reusable UI)
- - Context (Global State)
- - Services (API Layer)
- - Auth (Protected Routes)
- - Pages (Dashboard Views)
-
-### Backend (Spring Boot – AI-assisted)
- - Controllers
- - Services
- - Repositories
- - Auth & AI Logic
-
-- 🧠 Backend architecture was intentionally designed with a focus on security and scalability.
-- AI-assisted development was used to accelerate implementation while maintaining full ownership of system design and API contracts.
-
-# ⚙️ Local Setup Instructions
-### Prerequisites
-
-- Node.js (v18+ recommended)
-- npm
-- Java (for backend)
-- Ollama (for local AI insights)
-
-### Frontend Setup
-- git clone https://github.com/patelkarma/finora-ai.git
-- cd finora-ai/frontend
-- npm install
-- npm start
-
-### Backend Setup (Spring Boot)
-- cd backend
-- ./mvnw spring-boot:run
-
-#### Make sure the backend is running before starting the frontend.
-
-### Environment Variables (Example)
-- REACT_APP_API_BASE_URL=http://localhost:8080
-
-# 🎯 What I Learned From This Project
-
-- Designing production-style React architecture
-
-- Handling real-world authentication flows
-
-- Integrating frontend with secure backend APIs
-
-- Using AI-assisted development responsibly
-
-- Thinking beyond UI into system-level design
-
-- Preparing applications for real deployment scenarios
-
-# 📌 Project Status
-
-- ✅ Core features complete
-
-- ✅ Fully functional in local environment
-
-- 📽️ Demo video included
-
-- 🚀 Deployment-ready architecture (live deployment intentionally deferred)
-
-# 👩‍💻 About the Developer
-
-- Karma Patel
-- Frontend Developer | React.js
-- 3rd Year – Cloud & Application Development
-
-- Strong focus on frontend architecture and UI/UX
-
-- Experience with real-world authentication and API integration
-
-- Actively learning Spring Boot to strengthen full-stack ownership
-
-- GitHub: https://github.com/patelkarma
-
-# ⭐ Final Note for Recruiters
-
-- This project reflects my ability to:
-
-- Build realistic, scalable frontend systems
-
-- Work confidently with backend services
-
-- Use AI as a professional development accelerator
-
-- Clearly explain and take ownership of everything I build
+**Karma Patel** · 3rd year, Cloud & Application Development · [github.com/patelkarma](https://github.com/patelkarma)

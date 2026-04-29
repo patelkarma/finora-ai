@@ -33,4 +33,18 @@ public class MailService {
         msg.setText("Click to sign in: " + link);
         mailSender.send(msg);
     }
+
+    public void sendPasswordResetEmail(String to, String link, int ttlMinutes) {
+        SimpleMailMessage msg = new SimpleMailMessage();
+        msg.setFrom(fromAddress);
+        msg.setTo(to);
+        msg.setSubject("Reset your Finora password");
+        msg.setText(
+                "We received a request to reset your Finora password.\n\n" +
+                "Click the link below to choose a new password (valid for " + ttlMinutes + " minutes):\n\n" +
+                link + "\n\n" +
+                "If you did not request this, you can safely ignore this email — your password will not change.\n"
+        );
+        mailSender.send(msg);
+    }
 }

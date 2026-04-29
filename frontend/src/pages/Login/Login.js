@@ -109,7 +109,11 @@ const Login = () => {
                 Remember me
               </label>
 
-              <a className="linklike" href="/signup">Sign up</a>
+              <a className="linklike" href="/forgot-password">Forgot password?</a>
+            </div>
+
+            <div className="row-between" style={{ marginTop: "0.25rem", justifyContent: "flex-end" }}>
+              <a className="linklike" href="/signup">Don't have an account? Sign up</a>
             </div>
 
             <button className="btn-primary pulse" type="submit" disabled={loading}>

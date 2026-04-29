@@ -1,7 +1,7 @@
 
 package com.project.financeDashboard.repository;
 
-import com.project.financeDashboard.modal.LoginHistory;
+import com.project.financeDashboard.model.LoginHistory;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;

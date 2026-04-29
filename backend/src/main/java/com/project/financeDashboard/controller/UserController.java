@@ -1,15 +1,17 @@
 package com.project.financeDashboard.controller;
 
-import com.project.financeDashboard.modal.User;
+import com.project.financeDashboard.model.User;
 import com.project.financeDashboard.service.UserService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
+import io.swagger.v3.oas.annotations.tags.Tag;
 
 import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/users")
+@Tag(name = "Users", description = "User profile read/update")
 public class UserController {
 
     private final UserService userService;

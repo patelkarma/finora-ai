@@ -1,7 +1,7 @@
 package com.project.financeDashboard.service;
 
-import com.project.financeDashboard.modal.Budget;
-import com.project.financeDashboard.modal.User;
+import com.project.financeDashboard.model.Budget;
+import com.project.financeDashboard.model.User;
 import com.project.financeDashboard.repository.BudgetRepository;
 import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Service;

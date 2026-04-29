@@ -1,7 +1,7 @@
 // package com.project.financeDashboard.repository;
 
-// import com.project.financeDashboard.modal.Transaction;
-// import com.project.financeDashboard.modal.User;
+// import com.project.financeDashboard.model.Transaction;
+// import com.project.financeDashboard.model.User;
 // import org.springframework.data.jpa.repository.JpaRepository;
 // import org.springframework.data.jpa.repository.Query;
 
@@ -16,8 +16,8 @@
 
 package com.project.financeDashboard.repository;
 
-import com.project.financeDashboard.modal.Transaction;
-import com.project.financeDashboard.modal.User;
+import com.project.financeDashboard.model.Transaction;
+import com.project.financeDashboard.model.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;

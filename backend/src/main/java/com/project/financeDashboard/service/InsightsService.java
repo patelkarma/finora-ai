@@ -1,8 +1,9 @@
 package com.project.financeDashboard.service;
 
-import com.project.financeDashboard.modal.Insight;
-import com.project.financeDashboard.modal.User;
+import com.project.financeDashboard.model.Insight;
+import com.project.financeDashboard.model.User;
 import com.project.financeDashboard.repository.InsightRepository;
+import com.project.financeDashboard.service.llm.LlmService;
 import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Service;
 
@@ -13,15 +14,15 @@ import java.util.Optional;
 public class InsightsService {
 
     private final InsightRepository insightRepository;
-    private final OllamaService ollamaService;
+    private final LlmService llmService;
 
-    public InsightsService(InsightRepository insightRepository, OllamaService ollamaService) {
+    public InsightsService(InsightRepository insightRepository, LlmService llmService) {
         this.insightRepository = insightRepository;
-        this.ollamaService = ollamaService;
+        this.llmService = llmService;
     }
 
     public Insight generateAndSaveAIInsight(User user, String prompt) {
-        String aiResponse = ollamaService.generateInsightFromAI(prompt);
+        String aiResponse = llmService.generate(prompt);
 
         Insight insight = new Insight();
         insight.setUser(user);
