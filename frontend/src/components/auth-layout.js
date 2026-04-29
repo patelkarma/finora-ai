@@ -72,34 +72,22 @@ export function AuthLayout({ title, subtitle, step, children }) {
           transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
           className="w-full max-w-md"
         >
-          <div
-            className="rounded-2xl border bg-card/80 backdrop-blur-xl shadow-2xl shadow-black/10 p-8"
-            style={{ color: 'hsl(var(--foreground))' }}
-          >
+          <div className="rounded-2xl border bg-card/80 backdrop-blur-xl shadow-2xl shadow-black/10 p-8 text-zinc-900 dark:text-zinc-50">
             <div className="mb-6 text-center">
-              {/* Inline-style color is a belt-and-suspenders override against
-                  Bootstrap's body { color: var(--bs-body-color) } cascading
-                  through inherit. Once Bootstrap is gone in 2.7.4 we can
-                  drop the inline style. */}
-              <h1
-                className="text-2xl font-semibold tracking-tight"
-                style={{ color: 'hsl(var(--foreground))' }}
-              >
+              {/* Hardcoded zinc-50/900 instead of text-foreground because the
+                  CSS-variable approach kept getting overridden by something
+                  in the Bootstrap chain on local dev. zinc utilities compile
+                  to plain rgb(...) — no variable resolution to lose. */}
+              <h1 className="text-2xl font-semibold tracking-tight font-sans text-zinc-900 dark:text-zinc-50">
                 {title}
               </h1>
               {subtitle && (
-                <p
-                  className="mt-1.5 text-sm"
-                  style={{ color: 'hsl(var(--muted-foreground))' }}
-                >
+                <p className="mt-1.5 text-sm font-sans text-zinc-600 dark:text-zinc-400">
                   {subtitle}
                 </p>
               )}
               {step && (
-                <p
-                  className="mt-3 text-xs uppercase tracking-widest"
-                  style={{ color: 'hsl(var(--muted-foreground) / 0.8)' }}
-                >
+                <p className="mt-3 text-xs uppercase tracking-widest font-sans text-zinc-500 dark:text-zinc-500">
                   {step}
                 </p>
               )}
