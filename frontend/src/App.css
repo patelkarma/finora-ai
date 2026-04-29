@@ -1,24 +1,15 @@
 /*
- * Layout shell that wraps every page.
- * The old global blurred background image (.main-content::before) is gone
- * — the new design handles its own backgrounds (auth pages have an animated
- * gradient mesh, app pages will get their own treatment in 2.7.3+).
+ * Layout shell. Auth pages (Login, Signup, ForgotPassword, ResetPassword,
+ * SetPassword) drive their own full-viewport layout via AuthLayout. App
+ * pages will get their own treatment in 2.7.3+. This file is intentionally
+ * minimal — display: contents on the wrappers means they don't intercept
+ * sizing or painting; they're just structural.
  */
 
 .app-layout {
-  display: flex;
-  min-height: 100vh;
-  padding-bottom: 50px;
+  display: contents;
 }
 
 .main-content {
-  flex-grow: 1;
-  /* No horizontal padding here — auth pages span full viewport for the
-     gradient mesh, app pages add their own container padding. */
-}
-
-@media (max-width: 768px) {
-  .app-layout {
-    flex-direction: column;
-  }
+  display: contents;
 }

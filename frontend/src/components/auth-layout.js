@@ -72,14 +72,34 @@ export function AuthLayout({ title, subtitle, step, children }) {
           transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
           className="w-full max-w-md"
         >
-          <div className="rounded-2xl border bg-card/80 backdrop-blur-xl shadow-2xl shadow-black/10 p-8 text-foreground">
+          <div
+            className="rounded-2xl border bg-card/80 backdrop-blur-xl shadow-2xl shadow-black/10 p-8"
+            style={{ color: 'hsl(var(--foreground))' }}
+          >
             <div className="mb-6 text-center">
-              <h1 className="text-2xl font-semibold tracking-tight text-foreground">{title}</h1>
+              {/* Inline-style color is a belt-and-suspenders override against
+                  Bootstrap's body { color: var(--bs-body-color) } cascading
+                  through inherit. Once Bootstrap is gone in 2.7.4 we can
+                  drop the inline style. */}
+              <h1
+                className="text-2xl font-semibold tracking-tight"
+                style={{ color: 'hsl(var(--foreground))' }}
+              >
+                {title}
+              </h1>
               {subtitle && (
-                <p className="mt-1.5 text-sm text-muted-foreground">{subtitle}</p>
+                <p
+                  className="mt-1.5 text-sm"
+                  style={{ color: 'hsl(var(--muted-foreground))' }}
+                >
+                  {subtitle}
+                </p>
               )}
               {step && (
-                <p className="mt-3 text-xs uppercase tracking-widest text-muted-foreground/80">
+                <p
+                  className="mt-3 text-xs uppercase tracking-widest"
+                  style={{ color: 'hsl(var(--muted-foreground) / 0.8)' }}
+                >
                   {step}
                 </p>
               )}
