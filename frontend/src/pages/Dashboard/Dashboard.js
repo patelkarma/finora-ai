@@ -554,57 +554,65 @@ function EditModal({ form, onChange, onClose, onSave, onDelete }) {
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.95 }}
         transition={{ duration: 0.18 }}
-        className="w-full max-w-md rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 p-6 shadow-2xl"
+        className="w-full max-w-md"
         onClick={(e) => e.stopPropagation()}
       >
-        <h3 className="text-lg font-semibold mb-4">Edit transaction</h3>
-        <div className="space-y-3">
-          <div className="space-y-1.5">
-            <Label htmlFor="edit-desc">Description</Label>
-            <Input
-              id="edit-desc"
-              value={form.description}
-              onChange={(e) => onChange({ description: e.target.value })}
-            />
-          </div>
-          <div className="grid grid-cols-2 gap-3">
+        {/* Use Card here instead of a hand-rolled bg-white/dark:bg-zinc-950
+            div: Card already uses bg-card / text-card-foreground via CSS
+            variables, which we've already proved render correctly elsewhere
+            on the dashboard. Avoids any dark:variant compile inconsistency. */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Edit transaction</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
             <div className="space-y-1.5">
-              <Label htmlFor="edit-amount">Amount</Label>
+              <Label htmlFor="edit-desc">Description</Label>
               <Input
-                id="edit-amount"
-                type="number"
-                value={form.amount}
-                onChange={(e) => onChange({ amount: e.target.value })}
+                id="edit-desc"
+                value={form.description}
+                onChange={(e) => onChange({ description: e.target.value })}
               />
             </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <Label htmlFor="edit-amount">Amount</Label>
+                <Input
+                  id="edit-amount"
+                  type="number"
+                  value={form.amount}
+                  onChange={(e) => onChange({ amount: e.target.value })}
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="edit-cat">Category</Label>
+                <Input
+                  id="edit-cat"
+                  value={form.category}
+                  onChange={(e) => onChange({ category: e.target.value })}
+                />
+              </div>
+            </div>
             <div className="space-y-1.5">
-              <Label htmlFor="edit-cat">Category</Label>
+              <Label htmlFor="edit-date">Date</Label>
               <Input
-                id="edit-cat"
-                value={form.category}
-                onChange={(e) => onChange({ category: e.target.value })}
+                id="edit-date"
+                type="date"
+                value={form.transactionDate}
+                onChange={(e) => onChange({ transactionDate: e.target.value })}
               />
             </div>
-          </div>
-          <div className="space-y-1.5">
-            <Label htmlFor="edit-date">Date</Label>
-            <Input
-              id="edit-date"
-              type="date"
-              value={form.transactionDate}
-              onChange={(e) => onChange({ transactionDate: e.target.value })}
-            />
-          </div>
-        </div>
-        <div className="flex items-center justify-between mt-6">
-          <Button variant="ghost" className="text-destructive hover:bg-destructive/10" onClick={onDelete}>
-            Delete
-          </Button>
-          <div className="flex gap-2">
-            <Button variant="outline" onClick={onClose}>Cancel</Button>
-            <Button variant="gradient" onClick={onSave}>Save</Button>
-          </div>
-        </div>
+          </CardContent>
+          <CardFooter className="justify-between">
+            <Button variant="ghost" className="text-destructive hover:bg-destructive/10" onClick={onDelete}>
+              Delete
+            </Button>
+            <div className="flex gap-2">
+              <Button variant="outline" onClick={onClose}>Cancel</Button>
+              <Button variant="gradient" onClick={onSave}>Save</Button>
+            </div>
+          </CardFooter>
+        </Card>
       </motion.div>
     </motion.div>
   );
