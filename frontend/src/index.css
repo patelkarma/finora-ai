@@ -32,7 +32,7 @@
     --popover: 240 8% 7%;
     --popover-foreground: 240 5% 96%;
 
-    --primary: 270 95% 65%;              /* violet 500 */
+    --primary: 265 80% 68%;              /* softer violet, less saturated */
     --primary-foreground: 0 0% 100%;
 
     --secondary: 240 6% 14%;
@@ -41,7 +41,7 @@
     --muted: 240 6% 14%;
     --muted-foreground: 240 4% 65%;
 
-    --accent: 270 95% 65%;
+    --accent: 265 80% 68%;
     --accent-foreground: 0 0% 100%;
 
     --destructive: 0 84% 60%;
@@ -49,13 +49,13 @@
 
     --border: 240 6% 16%;
     --input: 240 6% 16%;
-    --ring: 270 95% 65%;
+    --ring: 265 80% 68%;
 
-    --gain: 142 71% 45%;                 /* income / positive */
-    --loss: 0 84% 60%;                   /* expense / negative */
+    --gain: 142 65% 50%;                 /* slightly brighter income green */
+    --loss: 0 75% 60%;                   /* expense / negative */
 
-    --brand-from: 270 95% 65%;           /* violet */
-    --brand-to: 320 95% 65%;             /* fuchsia */
+    --brand-from: 265 80% 70%;           /* softened violet */
+    --brand-to: 315 78% 72%;             /* softened fuchsia/pink */
 
     --radius: 0.75rem;
   }
@@ -70,7 +70,7 @@
     --popover: 0 0% 100%;
     --popover-foreground: 240 10% 4%;
 
-    --primary: 270 80% 50%;              /* slightly darker violet for contrast */
+    --primary: 265 70% 55%;              /* slightly more saturated for light-mode contrast */
     --primary-foreground: 0 0% 100%;
 
     --secondary: 240 5% 96%;
@@ -79,7 +79,7 @@
     --muted: 240 5% 96%;
     --muted-foreground: 240 4% 46%;
 
-    --accent: 270 80% 50%;
+    --accent: 265 70% 55%;
     --accent-foreground: 0 0% 100%;
 
     --destructive: 0 72% 51%;
@@ -87,13 +87,13 @@
 
     --border: 240 6% 90%;
     --input: 240 6% 90%;
-    --ring: 270 80% 50%;
+    --ring: 265 70% 55%;
 
     --gain: 142 60% 38%;
     --loss: 0 72% 51%;
 
-    --brand-from: 270 80% 50%;
-    --brand-to: 320 80% 50%;
+    --brand-from: 265 70% 60%;
+    --brand-to: 315 70% 62%;
   }
 }
 

@@ -298,16 +298,20 @@ const Dashboard = () => {
       )}
 
       {/* Greeting */}
-      <header className="flex items-center justify-between mb-6">
+      <header className="flex items-end justify-between mb-8 gap-4 flex-wrap">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-semibold tracking-tight">
+          <p className="text-xs uppercase tracking-wider text-zinc-500 dark:text-zinc-500 mb-1">
+            {new Date().toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long' })}
+          </p>
+          <h1 className="text-3xl sm:text-4xl font-semibold tracking-tight">
             Hello, {user?.name?.split(' ')[0] || 'there'}
+            <span className="text-zinc-400 dark:text-zinc-600"> 👋</span>
           </h1>
-          <p className="text-sm text-zinc-500 dark:text-zinc-400">
-            Here's your money this month.
+          <p className="text-sm text-zinc-500 dark:text-zinc-400 mt-1">
+            Here's your money this month at a glance.
           </p>
         </div>
-        <Button asChild variant="gradient">
+        <Button asChild variant="gradient" size="lg" className="shadow-lg shadow-primary/30">
           <Link to="/transactions">
             <Plus className="h-4 w-4" /> Add transaction
           </Link>
@@ -444,15 +448,42 @@ function StatCard({ label, value, tone, accent, showSign, colorize, icon: Icon, 
     <motion.div
       initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ delay, duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
+      transition={{ delay, duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+      whileHover={{ y: -3 }}
+      className="group"
     >
-      <Card className={cn(isBrand && 'bg-brand-gradient text-white border-none')}>
-        <CardHeader className="pb-2">
-          <div className="flex items-center justify-between">
-            <CardDescription className={cn(isBrand && 'text-white/80')}>{label}</CardDescription>
-            <Icon className={cn('h-4 w-4', isBrand ? 'text-white/80' : 'text-zinc-400')} />
+      <Card
+        className={cn(
+          'relative overflow-hidden transition-shadow duration-300',
+          isBrand
+            ? 'bg-brand-gradient text-white border-none shadow-xl shadow-primary/30 group-hover:shadow-2xl group-hover:shadow-primary/50'
+            : 'group-hover:shadow-lg group-hover:shadow-black/5 dark:group-hover:shadow-black/30 group-hover:border-zinc-300 dark:group-hover:border-zinc-700'
+        )}
+      >
+        {isBrand && (
+          <div className="absolute -top-16 -right-16 h-40 w-40 rounded-full bg-white/15 blur-3xl pointer-events-none" />
+        )}
+        <CardHeader className="pb-3">
+          <div className="flex items-center justify-between mb-1">
+            <CardDescription className={cn('text-xs uppercase tracking-wider', isBrand && 'text-white/75')}>
+              {label}
+            </CardDescription>
+            <div
+              className={cn(
+                'h-8 w-8 rounded-lg grid place-items-center',
+                isBrand
+                  ? 'bg-white/15'
+                  : tone === 'gain'
+                    ? 'bg-[hsl(var(--gain))]/10 text-[hsl(var(--gain))]'
+                    : tone === 'loss'
+                      ? 'bg-[hsl(var(--loss))]/10 text-[hsl(var(--loss))]'
+                      : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-500'
+              )}
+            >
+              <Icon className={cn('h-4 w-4', isBrand && 'text-white')} />
+            </div>
           </div>
-          <CardTitle className={cn('text-3xl', isBrand && 'text-white')}>
+          <CardTitle className={cn('text-4xl md:text-[2.75rem] font-semibold tracking-tight leading-none', isBrand && 'text-white')}>
             <MoneyValue
               value={value}
               showSign={showSign ? 'always' : 'never'}
@@ -464,6 +495,11 @@ function StatCard({ label, value, tone, accent, showSign, colorize, icon: Icon, 
             />
           </CardTitle>
         </CardHeader>
+        <CardContent className="pt-0 pb-5">
+          <p className={cn('text-xs', isBrand ? 'text-white/65' : 'text-zinc-500 dark:text-zinc-400')}>
+            This month
+          </p>
+        </CardContent>
       </Card>
     </motion.div>
   );
@@ -471,27 +507,40 @@ function StatCard({ label, value, tone, accent, showSign, colorize, icon: Icon, 
 
 function InsightCard({ insight, loading, onGenerate }) {
   return (
-    <Card className="lg:col-span-2 bg-brand-gradient text-white border-none overflow-hidden relative">
-      <div className="absolute -top-12 -right-12 h-48 w-48 rounded-full bg-white/10 blur-3xl pointer-events-none" />
-      <CardHeader>
-        <div className="flex items-center gap-2 text-white/80">
-          <Sparkles className="h-4 w-4" />
-          <CardDescription className="text-white/80">AI insight</CardDescription>
-        </div>
-        <CardTitle className="text-white text-lg leading-relaxed font-normal mt-1">
-          {insight ? insight.message : 'No insight yet — generate one based on your transactions and budgets.'}
-        </CardTitle>
-      </CardHeader>
-      <CardFooter className="gap-2">
-        <Button variant="secondary" size="sm" onClick={onGenerate} disabled={loading}>
-          <Sparkles className="h-4 w-4" />
-          {loading ? 'Generating…' : insight ? 'Regenerate' : 'Generate insight'}
-        </Button>
-        <Button asChild variant="ghost" size="sm" className="text-white hover:bg-white/10 hover:text-white">
-          <Link to="/ai-insights">View all insights →</Link>
-        </Button>
-      </CardFooter>
-    </Card>
+    <motion.div
+      whileHover={{ y: -3 }}
+      transition={{ duration: 0.2 }}
+      className="lg:col-span-2 group"
+    >
+      <Card className="bg-brand-gradient text-white border-none overflow-hidden relative shadow-xl shadow-primary/25 group-hover:shadow-2xl group-hover:shadow-primary/40 transition-shadow duration-300">
+        {/* Decorative blurred orbs */}
+        <div className="absolute -top-20 -right-20 h-64 w-64 rounded-full bg-white/15 blur-3xl pointer-events-none" />
+        <div className="absolute -bottom-20 -left-10 h-40 w-40 rounded-full bg-white/10 blur-3xl pointer-events-none" />
+
+        <CardHeader>
+          <div className="flex items-center gap-2 text-white/80 mb-1">
+            <div className="h-7 w-7 rounded-md bg-white/15 grid place-items-center">
+              <Sparkles className="h-3.5 w-3.5 text-white" />
+            </div>
+            <CardDescription className="text-white/80 text-xs uppercase tracking-wider">
+              AI insight
+            </CardDescription>
+          </div>
+          <CardTitle className="text-white text-base md:text-lg leading-relaxed font-normal mt-2 max-w-prose">
+            {insight ? insight.message : 'No insight yet — generate one based on your transactions and budgets.'}
+          </CardTitle>
+        </CardHeader>
+        <CardFooter className="gap-2">
+          <Button variant="secondary" size="sm" onClick={onGenerate} disabled={loading}>
+            <Sparkles className="h-4 w-4" />
+            {loading ? 'Generating…' : insight ? 'Regenerate' : 'Generate insight'}
+          </Button>
+          <Button asChild variant="ghost" size="sm" className="text-white hover:bg-white/10 hover:text-white">
+            <Link to="/ai-insights">View all →</Link>
+          </Button>
+        </CardFooter>
+      </Card>
+    </motion.div>
   );
 }
 

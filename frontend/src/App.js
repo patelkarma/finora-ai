@@ -5,7 +5,8 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-d
 import { AuthProvider, AuthContext } from "./context/AuthContext";
 import { ThemeProvider } from "./components/theme-provider";
 
-import Navbar from "./components/navbar";
+// Navigation now lives inside AppLayout (sidebar on desktop, top-bar on
+// mobile), so we no longer mount a global Navbar at the App level.
 
 import Login from "./pages/Login/Login";
 import Signup from "./pages/Signup/Signup";
@@ -54,7 +55,6 @@ const AuthWrapper = () => {
 
   return (
     <>
-      {user && <Navbar />}
       <div className="app-layout">
         <main className="main-content">
           <Routes>
