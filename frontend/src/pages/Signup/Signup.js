@@ -60,17 +60,28 @@ const Signup = () => {
 
   const validateStep = () => {
     if (step === 1) {
-      if (!name || !email) return setMessage('Please fill required fields.'), false;
-      if (name.trim().length < 2) return setMessage('Name must be at least 2 characters.'), false;
+      if (!name || !email) {
+        setMessage('Please fill required fields.');
+        return false;
+      }
+      if (name.trim().length < 2) {
+        setMessage('Name must be at least 2 characters.');
+        return false;
+      }
     }
     if (step === 2) {
-      if (!password || !confirmPassword) return setMessage('Please fill password fields.'), false;
-      if (password !== confirmPassword) return setMessage('Passwords do not match.'), false;
-      if (!STRONG_PASSWORD.test(password))
-        return (
-          setMessage('Password must meet all five criteria below.'),
-          false
-        );
+      if (!password || !confirmPassword) {
+        setMessage('Please fill password fields.');
+        return false;
+      }
+      if (password !== confirmPassword) {
+        setMessage('Passwords do not match.');
+        return false;
+      }
+      if (!STRONG_PASSWORD.test(password)) {
+        setMessage('Password must meet all five criteria below.');
+        return false;
+      }
     }
     return true;
   };
