@@ -483,13 +483,13 @@ function StatCard({ label, value, tone, accent, showSign, colorize, icon: Icon, 
               <Icon className={cn('h-4 w-4', isBrand && 'text-white')} />
             </div>
           </div>
-          <CardTitle className={cn('text-3xl md:text-4xl font-semibold tracking-tight leading-tight truncate', isBrand && 'text-white')}>
+          <CardTitle className={cn('text-2xl sm:text-3xl xl:text-4xl font-semibold tracking-tight leading-tight truncate', isBrand && 'text-white')}>
             <MoneyValue
               value={value}
               showSign={showSign ? 'always' : 'never'}
               colorize={colorize && !isBrand}
               className={cn(
-                'truncate',
+                'truncate block',
                 tone === 'gain' && !isBrand && 'text-[hsl(var(--gain))]',
                 tone === 'loss' && !isBrand && 'text-[hsl(var(--loss))]'
               )}

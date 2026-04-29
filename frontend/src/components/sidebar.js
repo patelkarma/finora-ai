@@ -57,7 +57,7 @@ export default function Sidebar() {
   return (
     <>
       {/* Mobile top bar */}
-      <header className="md:hidden sticky top-0 z-40 h-14 px-4 flex items-center justify-between border-b border-zinc-200/60 dark:border-zinc-800/60 bg-white/80 dark:bg-zinc-950/80 backdrop-blur-xl">
+      <header className="lg:hidden sticky top-0 z-40 h-14 px-4 flex items-center justify-between border-b border-zinc-200/60 dark:border-zinc-800/60 bg-white/80 dark:bg-zinc-950/80 backdrop-blur-xl">
         <Link to="/dashboard" className="flex items-center gap-2">
           <div className="h-8 w-8 rounded-lg bg-brand-gradient grid place-items-center">
             <Sparkles className="h-4 w-4 text-white" />
@@ -77,7 +77,7 @@ export default function Sidebar() {
       </header>
 
       {/* Desktop sidebar */}
-      <aside className="hidden md:flex fixed top-0 left-0 z-30 h-screen w-60 flex-col border-r border-zinc-200/60 dark:border-zinc-800/60 bg-white/60 dark:bg-zinc-950/60 backdrop-blur-xl">
+      <aside className="hidden lg:flex fixed top-0 left-0 z-30 h-screen w-60 flex-col border-r border-zinc-200/60 dark:border-zinc-800/60 bg-white/60 dark:bg-zinc-950/60 backdrop-blur-xl">
         {/* Brand */}
         <Link to="/dashboard" className="flex items-center gap-2.5 px-5 h-16 border-b border-zinc-200/60 dark:border-zinc-800/60">
           <motion.div
@@ -194,7 +194,7 @@ export default function Sidebar() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="md:hidden fixed inset-0 z-40 bg-black/50 backdrop-blur-sm"
+              className="lg:hidden fixed inset-0 z-40 bg-black/50 backdrop-blur-sm"
               onClick={() => setDrawerOpen(false)}
             />
             <motion.aside
@@ -202,7 +202,7 @@ export default function Sidebar() {
               animate={{ x: 0 }}
               exit={{ x: '-100%' }}
               transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-              className="md:hidden fixed top-0 left-0 z-50 h-full w-72 bg-white dark:bg-zinc-950 border-r border-zinc-200 dark:border-zinc-800 flex flex-col"
+              className="lg:hidden fixed top-0 left-0 z-50 h-full w-72 bg-white dark:bg-zinc-950 border-r border-zinc-200 dark:border-zinc-800 flex flex-col"
             >
               <div className="flex items-center justify-between px-5 h-14 border-b border-zinc-200 dark:border-zinc-800">
                 <div className="flex items-center gap-2">

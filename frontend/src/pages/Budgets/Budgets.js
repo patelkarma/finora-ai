@@ -215,7 +215,7 @@ function BudgetCard({ budget, index, onEdit, onDelete }) {
               </p>
               <CardTitle className="text-lg mt-1">{budget.category}</CardTitle>
             </div>
-            <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
+            <div className="flex items-center gap-0.5 opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity">
               <button
                 onClick={onEdit}
                 className="h-8 w-8 grid place-items-center rounded hover:bg-zinc-200 dark:hover:bg-zinc-800 text-zinc-500"

@@ -300,7 +300,7 @@ const Transactions = () => {
                         showSign="always"
                         className="text-sm font-medium"
                       />
-                      <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <div className="flex items-center gap-0.5 opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity">
                         <button
                           onClick={(e) => { e.stopPropagation(); handleEdit(t); }}
                           className="h-8 w-8 grid place-items-center rounded hover:bg-zinc-200 dark:hover:bg-zinc-800 text-zinc-500 dark:text-zinc-400"
