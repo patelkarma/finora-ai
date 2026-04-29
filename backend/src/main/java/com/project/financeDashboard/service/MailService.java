@@ -1,50 +1,36 @@
 package com.project.financeDashboard.service;
 
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.mail.SimpleMailMessage;
-import org.springframework.mail.javamail.JavaMailSender;
+import com.project.financeDashboard.service.email.EmailProvider;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
+/**
+ * Thin facade that delegates to whichever {@link EmailProvider} Spring picked
+ * at boot ({@code email.provider=smtp|brevo}). Keeping the existing class name
+ * means callers in AuthController / PasswordResetService don't change when
+ * the underlying transport is swapped.
+ */
 @Service
 public class MailService {
-    private final JavaMailSender mailSender;
 
-    @Value("${spring.mail.from}")
-    private String fromAddress;
+    private static final Logger log = LoggerFactory.getLogger(MailService.class);
+    private final EmailProvider provider;
 
-    public MailService(JavaMailSender mailSender) {
-        this.mailSender = mailSender;
+    public MailService(EmailProvider provider) {
+        this.provider = provider;
+        log.info("MailService initialized with email provider: {}", provider.name());
     }
 
     public void sendOtp(String to, String code) {
-        SimpleMailMessage msg = new SimpleMailMessage();
-        msg.setFrom(fromAddress);
-        msg.setTo(to);
-        msg.setSubject("Your Finora OTP");
-        msg.setText("Your OTP code is: " + code + "\nIt will expire in 5 minutes.");
-        mailSender.send(msg);
+        provider.sendOtp(to, code);
     }
 
     public void sendMagicLink(String to, String link) {
-        SimpleMailMessage msg = new SimpleMailMessage();
-        msg.setFrom(fromAddress);
-        msg.setTo(to);
-        msg.setSubject("Your Finora Magic Link");
-        msg.setText("Click to sign in: " + link);
-        mailSender.send(msg);
+        provider.sendMagicLink(to, link);
     }
 
     public void sendPasswordResetEmail(String to, String link, int ttlMinutes) {
-        SimpleMailMessage msg = new SimpleMailMessage();
-        msg.setFrom(fromAddress);
-        msg.setTo(to);
-        msg.setSubject("Reset your Finora password");
-        msg.setText(
-                "We received a request to reset your Finora password.\n\n" +
-                "Click the link below to choose a new password (valid for " + ttlMinutes + " minutes):\n\n" +
-                link + "\n\n" +
-                "If you did not request this, you can safely ignore this email — your password will not change.\n"
-        );
-        mailSender.send(msg);
+        provider.sendPasswordResetEmail(to, link, ttlMinutes);
     }
 }
