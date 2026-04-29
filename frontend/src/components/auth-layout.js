@@ -72,9 +72,9 @@ export function AuthLayout({ title, subtitle, step, children }) {
           transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
           className="w-full max-w-md"
         >
-          <div className="rounded-2xl border bg-card/80 backdrop-blur-xl shadow-2xl shadow-black/10 p-8">
+          <div className="rounded-2xl border bg-card/80 backdrop-blur-xl shadow-2xl shadow-black/10 p-8 text-foreground">
             <div className="mb-6 text-center">
-              <h1 className="text-2xl font-semibold tracking-tight">{title}</h1>
+              <h1 className="text-2xl font-semibold tracking-tight text-foreground">{title}</h1>
               {subtitle && (
                 <p className="mt-1.5 text-sm text-muted-foreground">{subtitle}</p>
               )}
