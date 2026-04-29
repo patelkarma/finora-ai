@@ -1,13 +1,15 @@
-import "bootstrap/dist/css/bootstrap.min.css";
-import React, { useState } from "react";
-import { Link } from "react-router-dom";
-import "../Login/Login.css";
-import authService from "../../services/authService";
-import logo from "../../assets/images/logo.png";
-import leftImage from "../../assets/images/img-2.avif";
+import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
+import { motion } from 'framer-motion';
+import authService from '../../services/authService';
+import { AuthLayout } from '../../components/auth-layout';
+import { AuthMessage } from '../../components/auth-message';
+import { Button } from '../../components/ui/button';
+import { Input } from '../../components/ui/input';
+import { Label } from '../../components/ui/label';
 
 const ForgotPassword = () => {
-  const [email, setEmail] = useState("");
+  const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState(null);
   const [submitted, setSubmitted] = useState(false);
@@ -18,64 +20,70 @@ const ForgotPassword = () => {
     setMessage(null);
     try {
       const res = await authService.forgotPassword(email);
-      setMessage(res?.data?.message || "If an account exists for that email, a reset link has been sent.");
+      setMessage(
+        res?.data?.message ||
+          'If an account exists for that email, a reset link has been sent.'
+      );
       setSubmitted(true);
     } catch (err) {
-      setMessage(err?.response?.data?.message || "Something went wrong. Please try again.");
+      setMessage(err?.response?.data?.message || 'Something went wrong. Please try again.');
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="login-layout">
-      <div className="branding-panel" style={{ backgroundImage: `url(${leftImage})` }} />
-
-      <div className="form-panel">
-        <div className="glass-card animated-card">
-          <div className="logo-wrap">
-            <img src={logo} alt="logo" className="logo" />
+    <AuthLayout
+      title="Reset your password"
+      subtitle="We'll email you a link valid for 30 minutes."
+    >
+      {!submitted && (
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="email">Email</Label>
+            <Input
+              id="email"
+              type="email"
+              required
+              autoComplete="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="you@example.com"
+            />
           </div>
 
-          <h2 className="title">Forgot your password?</h2>
-          <p className="subtitle">
-            Enter your email and we'll send a reset link valid for 30 minutes.
-          </p>
+          <motion.div whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.99 }}>
+            <Button
+              type="submit"
+              variant="gradient"
+              size="lg"
+              className="w-full"
+              disabled={loading}
+            >
+              {loading ? 'Sending…' : 'Send reset link'}
+            </Button>
+          </motion.div>
+        </form>
+      )}
 
-          {!submitted && (
-            <form onSubmit={handleSubmit} className="login-form">
-              <div className="field">
-                <input
-                  type="email"
-                  required
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder=" "
-                />
-                <label>Email address</label>
-              </div>
+      <AuthMessage message={message} />
 
-              <button className="btn-primary pulse" type="submit" disabled={loading}>
-                {loading ? "Sending..." : "Send reset link"}
-              </button>
-            </form>
-          )}
+      {submitted && (
+        <p className="mt-4 text-xs text-muted-foreground">
+          If you don't see it within a minute, check your <strong>Spam</strong> or{' '}
+          <strong>Promotions</strong> folder.
+        </p>
+      )}
 
-          {message && <div className="message">{message}</div>}
-
-          {submitted && (
-            <small style={{ display: "block", marginTop: "12px", opacity: 0.75 }}>
-              If you don't see it within a minute, please check your <strong>Spam</strong> or <strong>Promotions</strong> folder.
-            </small>
-          )}
-
-          <div className="row-between" style={{ marginTop: "1rem" }}>
-            <Link className="linklike" to="/login">Back to login</Link>
-            <Link className="linklike" to="/signup">Sign up</Link>
-          </div>
-        </div>
+      <div className="mt-6 flex items-center justify-between text-sm">
+        <Link to="/login" className="text-muted-foreground hover:text-foreground transition-colors">
+          ← Back to login
+        </Link>
+        <Link to="/signup" className="text-muted-foreground hover:text-foreground transition-colors">
+          Create account
+        </Link>
       </div>
-    </div>
+    </AuthLayout>
   );
 };
 
