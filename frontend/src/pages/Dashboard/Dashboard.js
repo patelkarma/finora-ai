@@ -152,20 +152,24 @@ const Dashboard = () => {
         type: 'income',
         userId: user.id,
       });
-      // Lock the gate open via the sticky ref — even if the next refresh
-      // doesn't yet see this transaction (cache lag on Render), we won't
-      // bounce back to the welcome form.
+
+      // Surface the actual response shape so we can diagnose silent
+      // backend issues. If the server didn't echo back a saved
+      // transaction with an id, something went wrong on the backend
+      // even if the HTTP status was 200 — refuse to advance the UI.
+      console.log('[Dashboard] addTransaction response:', saved);
+      if (!saved || typeof saved !== 'object' || !saved.id) {
+        throw new Error('Could not save income — the server returned an unexpected response.');
+      }
+
+      // Lock the gate open via the sticky ref so a subsequent refresh
+      // can't downgrade the dashboard back to the welcome screen.
       incomeOnceSeen.current = true;
       setIncomeEntered(true);
-      // Seed local state with the saved transaction so the dashboard
-      // renders against real data immediately, without waiting for the
-      // next GET to hit a freshly-warmed cache.
-      if (saved && saved.id) {
-        setTransactions((prev) => [saved, ...prev]);
-      }
-      // Background refresh to pull anything else that may have changed
-      // (insights, other categories) — doesn't block the UI.
-      refresh();
+      // Seed local state with the saved transaction — the dashboard
+      // renders against real data immediately, no background refresh
+      // race to overwrite this with a stale empty list.
+      setTransactions((prev) => [saved, ...prev]);
     } catch (err) {
       console.error('Failed to save income:', err);
       const msg =
