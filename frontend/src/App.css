@@ -1,40 +1,24 @@
+/*
+ * Layout shell that wraps every page.
+ * The old global blurred background image (.main-content::before) is gone
+ * — the new design handles its own backgrounds (auth pages have an animated
+ * gradient mesh, app pages will get their own treatment in 2.7.3+).
+ */
+
 .app-layout {
   display: flex;
   min-height: 100vh;
   padding-bottom: 50px;
-  /* Account for fixed navbar height */
 }
 
 .main-content {
   flex-grow: 1;
-  /* padding: 20px; */ /*Commented because i dont wanted space around my pages */
-  /* background-color: #a4b6e5; */
-  padding-left: 40px;
-  padding-right: 40px;
-}
-
-/* For background image :- */
-.main-content::before {
-  content: "";
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-image: url("./assets/images/back-img-3.jpg");
-  background-size: cover; /* Makes image shrink/expand on all devices */
-  background-position: center; /* Keeps main focus in center */
-  background-repeat: no-repeat; /* Avoids repeated tiles */
-  filter: blur(9px);
-  z-index: -1;
+  /* No horizontal padding here — auth pages span full viewport for the
+     gradient mesh, app pages add their own container padding. */
 }
 
 @media (max-width: 768px) {
   .app-layout {
     flex-direction: column;
-    padding-top: 60px; /* Adjust for mobile navbar */
-  }
-  .main-content {
-    padding: 15px;
   }
 }
