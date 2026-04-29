@@ -270,6 +270,10 @@ const Signup = () => {
                   {otpLoading ? "Sending OTP..." : "Send OTP (email)"}
                 </button>
 
+                <small style={{ display: "block", marginTop: "8px", marginBottom: "8px", opacity: 0.75 }}>
+                  Didn't get the email? Check your <strong>Spam</strong> or <strong>Promotions</strong> folder — it can take up to a minute to arrive.
+                </small>
+
                 <div className="field">
                   <input
                     value={otp}

@@ -63,6 +63,12 @@ const ForgotPassword = () => {
 
           {message && <div className="message">{message}</div>}
 
+          {submitted && (
+            <small style={{ display: "block", marginTop: "12px", opacity: 0.75 }}>
+              If you don't see it within a minute, please check your <strong>Spam</strong> or <strong>Promotions</strong> folder.
+            </small>
+          )}
+
           <div className="row-between" style={{ marginTop: "1rem" }}>
             <Link className="linklike" to="/login">Back to login</Link>
             <Link className="linklike" to="/signup">Sign up</Link>
