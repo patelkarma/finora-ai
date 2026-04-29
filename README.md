@@ -116,17 +116,21 @@ sequenceDiagram
 
 | Layer | Choice | Why |
 |---|---|---|
-| Frontend | React 18, React Router 7, Bootstrap 5, Chart.js | Familiar, productive; Bootstrap → Tailwind/shadcn migration scheduled for Phase 2 |
+| Frontend | React 18, React Router 7, Bootstrap 5 (→ Tailwind + shadcn in Phase 2.7), Chart.js | Modern stack, recruiter-shareable screenshots after design rebuild |
 | Backend | Spring Boot 3.5 (Java 17) | Mature, security-first, hireable |
-| DB | Postgres 15 (Supabase) + Flyway | Relational, ACID, professional schema management |
+| DB | Postgres 15 (Supabase) + Flyway + composite indexes | Relational, ACID, professional schema management |
+| Cache | Spring Cache + Redis (Redis Cloud) | 13× p95 latency reduction on hot reads ([loadtests/results.md](./loadtests/results.md)) |
 | Auth | JWT (jjwt) + OAuth2 (Spring Security) + email OTP | Stateless, mobile-friendly, real-world auth surfaces |
+| Email | Vendor-neutral `EmailProvider` (SMTP / Brevo HTTP API) | HTTP fallback for hosts that block outbound SMTP |
+| Rate limiting | Bucket4j (token bucket) on auth + LLM endpoints | Abuse-prevention with Retry-After 429 envelope |
 | API docs | Springdoc OpenAPI / Swagger UI | Auto-generated, browsable, recruiter-shareable |
 | Resilience | Resilience4j (circuit breaker + retry) | Fault-isolation around the LLM call |
 | LLM | Google Gemini 2.0 Flash (free tier) with local Ollama fallback | Free; provider-neutral interface |
 | Validation | Jakarta Bean Validation | Field-level error envelope |
-| Observability | Spring Boot Actuator | `/actuator/health` for Render probes, `/actuator/info` for build metadata |
+| Observability | Spring Boot Actuator + Sentry (errors + APM) | `/actuator/health` probes, Sentry error tracking on FE + BE |
+| Load testing | k6 ([loadtests/](./loadtests/)) | Documented p50/p95/p99 numbers for every perf claim in this README |
 | Tests | JUnit 5, Mockito, AssertJ, H2 in-memory | Fast, no external deps |
-| Hosting | Vercel (FE) · Render (BE) · Supabase (Postgres) — all free tier | Zero-cost deploy story |
+| Hosting | Vercel (FE) · Render (BE) · Supabase (Postgres) · Redis Cloud · Brevo · Sentry — all free tier | Zero-cost deploy story |
 | CI/CD | GitHub Actions → Maven build & test → Render deploy webhook | Deploy on every green main push |
 
 ---
