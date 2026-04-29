@@ -1,14 +1,32 @@
 import api from './api';
 
+// Backend now returns Spring Page<Transaction>:
+//   { content: [...], totalElements, totalPages, number, size, ... }
+// We unwrap .content for callers that just want the array.
+// size is capped at 100 server-side.
+
 const transactionService = {
 
   getRecentTransactions: async (userId) => {
-    const response = await api.get(`/transactions/user/${userId}`);
-    return response.data.slice(0, 5); // Limit to recent
+    const response = await api.get(`/transactions/user/${userId}`, {
+      params: { page: 0, size: 5, sort: 'transactionDate,desc' }
+    });
+    return response.data.content || [];
   },
 
   getAllTransactions: async (userId) => {
-    const response = await api.get(`/transactions/user/${userId}`);
+    const response = await api.get(`/transactions/user/${userId}`, {
+      params: { page: 0, size: 100, sort: 'transactionDate,desc' }
+    });
+    return response.data.content || [];
+  },
+
+  // Paginated reader for the upcoming Transactions page UI. Returns the full
+  // Page envelope so the UI can render page controls / totals.
+  getTransactionsPage: async (userId, page = 0, size = 20, sort = 'transactionDate,desc') => {
+    const response = await api.get(`/transactions/user/${userId}`, {
+      params: { page, size, sort }
+    });
     return response.data;
   },
 

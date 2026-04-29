@@ -6,11 +6,16 @@ const budgetService = {
       // Fetch budgets and transactions in parallel
       const [budgetsRes, transactionsRes] = await Promise.all([
         api.get(`/budgets/user/${userId}`),
-        api.get(`/transactions/user/${userId}`)
+        // Transactions endpoint is now paginated; cap at 100 (server max)
+        // for the budget-vs-spent calculation. TODO: move the per-category
+        // sum to the backend so we don't depend on the client iterating.
+        api.get(`/transactions/user/${userId}`, {
+          params: { page: 0, size: 100, sort: 'transactionDate,desc' }
+        })
       ]);
 
       const budgets = budgetsRes.data;
-      const transactions = transactionsRes.data;
+      const transactions = transactionsRes.data.content || [];
 
       // Create a map to track total spent per category (case-insensitive)
       const spentMap = {};

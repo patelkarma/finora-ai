@@ -6,6 +6,8 @@ import com.project.financeDashboard.model.User;
 import com.project.financeDashboard.repository.TransactionRepository;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Service;
 
@@ -38,6 +40,20 @@ public class TransactionService {
     @Cacheable(value = RedisCacheConfig.CACHE_TRANSACTIONS, key = "#userId")
     public List<Transaction> getTransactionsByUserId(Long userId) {
         return transactionRepository.findByUserId(userId);
+    }
+
+    /**
+     * Paginated read. Cache key includes the page descriptor so different
+     * pages don't collide. Spring's {@link Pageable} has a stable
+     * equals/hashCode based on page, size and sort, so the same query
+     * always resolves to the same Redis key.
+     */
+    @Cacheable(
+            value = RedisCacheConfig.CACHE_TRANSACTIONS,
+            key = "'page:' + #userId + ':' + #pageable.pageNumber + ':' + #pageable.pageSize + ':' + #pageable.sort"
+    )
+    public Page<Transaction> getTransactionsPage(Long userId, Pageable pageable) {
+        return transactionRepository.findByUserId(userId, pageable);
     }
 
     @CacheEvict(value = RedisCacheConfig.CACHE_TRANSACTIONS, allEntries = true)

@@ -7,6 +7,8 @@ import com.project.financeDashboard.repository.InsightRepository;
 import com.project.financeDashboard.service.llm.LlmService;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Service;
 
@@ -48,6 +50,14 @@ public class InsightsService {
     @Cacheable(value = RedisCacheConfig.CACHE_INSIGHTS, key = "#userId")
     public List<Insight> getInsightsByUser(Long userId) {
         return insightRepository.findByUserId(userId);
+    }
+
+    @Cacheable(
+            value = RedisCacheConfig.CACHE_INSIGHTS,
+            key = "'page:' + #userId + ':' + #pageable.pageNumber + ':' + #pageable.pageSize + ':' + #pageable.sort"
+    )
+    public Page<Insight> getInsightsPage(Long userId, Pageable pageable) {
+        return insightRepository.findByUserId(userId, pageable);
     }
 
     @CacheEvict(value = RedisCacheConfig.CACHE_INSIGHTS, allEntries = true)

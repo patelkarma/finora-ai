@@ -1,35 +1,22 @@
-// package com.project.financeDashboard.repository;
-
-// import com.project.financeDashboard.model.Transaction;
-// import com.project.financeDashboard.model.User;
-// import org.springframework.data.jpa.repository.JpaRepository;
-// import org.springframework.data.jpa.repository.Query;
-
-// import java.util.List;
-
-// // Repository for transaction stuff
-// public interface TransactionRepository extends JpaRepository<Transaction, Long> {
-//     // Get all transactions for a particular user
-//     @Query("SELECT t FROM Transaction t WHERE t.user.id = :userId")
-//     List<Transaction> findByUser(User user);
-// }
-
 package com.project.financeDashboard.repository;
 
 import com.project.financeDashboard.model.Transaction;
 import com.project.financeDashboard.model.User;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.repository.query.Param;
 
 import java.util.List;
 
-// Repository for transaction stuff
 public interface TransactionRepository extends JpaRepository<Transaction, Long> {
-    // Get all transactions for a particular user
+
+    /** Unbounded — kept only for internal callers that need the full set
+     *  (e.g. AI insight prompt building). Don't use for user-facing endpoints. */
     List<Transaction> findByUser(User user);
 
-    // New method to fetch by user ID
-    @Query("SELECT t FROM Transaction t WHERE t.user.id = :userId")
-    List<Transaction> findByUserId(@Param("userId") Long userId);
+    List<Transaction> findByUserId(Long userId);
+
+    /** Paginated read for user-facing endpoints. The composite index
+     *  idx_transactions_user_date satisfies this query. */
+    Page<Transaction> findByUserId(Long userId, Pageable pageable);
 }

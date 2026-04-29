@@ -3,6 +3,10 @@ package com.project.financeDashboard.controller;
 import com.project.financeDashboard.model.Insight;
 import com.project.financeDashboard.model.User;
 import com.project.financeDashboard.service.*;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
@@ -52,14 +56,32 @@ public class AIInsightsController {
         }
     }
 
+    /**
+     * Paginated insights for the user, ordered by created_at DESC by default.
+     * Backed by composite index idx_insights_user_created.
+     */
     @GetMapping("/insights/user/{userId}")
-    public ResponseEntity<List<Insight>> getInsightsByUser(@PathVariable Long userId) {
+    public ResponseEntity<Page<Insight>> getInsightsByUser(
+            @PathVariable Long userId,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size,
+            @RequestParam(defaultValue = "createdAt,desc") String sort) {
+
         Optional<User> authUser = getAuthenticatedUser();
         if (authUser.isEmpty() || !authUser.get().getId().equals(userId)) {
             return ResponseEntity.status(403).build();
         }
-        List<Insight> insights = insightsService.getInsightsByUser(userId);
-        return ResponseEntity.ok(insights);
+
+        size = Math.min(Math.max(size, 1), 100);
+        String[] parts = sort.split(",");
+        Sort sortSpec = parts.length == 1
+                ? Sort.by(parts[0])
+                : Sort.by(parts[1].equalsIgnoreCase("desc")
+                        ? Sort.Direction.DESC : Sort.Direction.ASC, parts[0]);
+        Pageable pageable = PageRequest.of(page, size, sortSpec);
+
+        Page<Insight> result = insightsService.getInsightsPage(userId, pageable);
+        return ResponseEntity.ok(result);
     }
 
     private String buildPrompt(User user) {
