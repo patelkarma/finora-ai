@@ -56,5 +56,12 @@ public class RateLimitConfig implements WebMvcConfigurer {
         registry.addInterceptor(new RateLimitInterceptor(
                         RateLimitRule.perUser("ai.insights.generate", 20, Duration.ofHours(1))))
                 .addPathPatterns("/api/ai/insights/generate");
+
+        // Chat is more chatty by nature — 60 / hour / USER. Still
+        // enough headroom for a normal conversation but caps a runaway
+        // client that holds Enter.
+        registry.addInterceptor(new RateLimitInterceptor(
+                        RateLimitRule.perUser("ai.chat", 60, Duration.ofHours(1))))
+                .addPathPatterns("/api/ai/chat");
     }
 }

@@ -6,6 +6,7 @@ import {
   Receipt,
   Target,
   Sparkles,
+  MessageSquare,
   User,
   LogOut,
   Settings,
@@ -21,6 +22,7 @@ const NAV_ITEMS = [
   { to: '/transactions',  label: 'Transactions', icon: Receipt },
   { to: '/budgets',       label: 'Budgets',      icon: Target },
   { to: '/ai-insights',   label: 'Insights',     icon: Sparkles },
+  { to: '/chat',          label: 'Ask AI',       icon: MessageSquare },
 ];
 
 /**

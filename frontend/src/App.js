@@ -15,6 +15,7 @@ import Transactions from "./pages/Transactions/Transactions";
 import Budgets from "./pages/Budgets/Budgets";
 import Profile from "./pages/Profile/Profile";
 import AIInsights from "./pages/AIInsights/AIInsights";
+import Chat from "./pages/Chat/Chat";
 import OAuthSuccess from "./pages/OAuth/OAuthSuccess";
 import SetPassword from "./pages/SetPassword/SetPassword";
 import ForgotPassword from "./pages/ForgotPassword/ForgotPassword";
@@ -79,6 +80,7 @@ const AuthWrapper = () => {
             <Route path="/budgets" element={<ProtectedRoute><Budgets /></ProtectedRoute>} />
             <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
             <Route path="/ai-insights" element={<ProtectedRoute><AIInsights /></ProtectedRoute>} />
+            <Route path="/chat" element={<ProtectedRoute><Chat /></ProtectedRoute>} />
 
             {/* Salary aliases → Profile */}
             <Route path="/salary" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
