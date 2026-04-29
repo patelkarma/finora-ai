@@ -1,16 +1,21 @@
 package com.project.financeDashboard.service.llm;
 
+import com.project.financeDashboard.config.RedisCacheConfig;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import io.github.resilience4j.retry.annotation.Retry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
 /**
  * Public-facing LLM service. Wraps the active {@link LlmProvider} with
- * Resilience4j circuit breaker and retry, and supplies a graceful fallback
- * when the provider is unhealthy so the user sees something useful instead
- * of a 500.
+ * Resilience4j circuit breaker and retry, supplies a graceful fallback
+ * when the provider is unhealthy, and caches identical-prompt responses
+ * for 1 hour to avoid burning the Gemini free-tier quota (1500 req/day).
+ *
+ * <p>Cache hits skip the entire pipeline (circuit breaker, retry, HTTP
+ * call) so a hot prompt resolves in &lt;5ms instead of 500–2000ms.
  */
 @Service
 public class LlmService {
@@ -24,6 +29,16 @@ public class LlmService {
         log.info("LLM provider initialized: {}", provider.name());
     }
 
+    /**
+     * Cached on the prompt string itself. Identical prompt → identical
+     * response, so re-asking the same question doesn't burn quota.
+     *
+     * <p>Note: {@code @Cacheable} sits OUTSIDE {@code @CircuitBreaker} in
+     * the Spring proxy stack, so a cache hit also bypasses the breaker.
+     * This is intentional — the breaker is there to protect the upstream
+     * LLM, not the cache.
+     */
+    @Cacheable(value = RedisCacheConfig.CACHE_LLM, key = "#prompt")
     @CircuitBreaker(name = "llm", fallbackMethod = "fallback")
     @Retry(name = "llm")
     public String generate(String prompt) {
