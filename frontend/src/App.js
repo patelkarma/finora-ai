@@ -3,6 +3,7 @@ import React, { useContext } from "react";
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 
 import { AuthProvider, AuthContext } from "./context/AuthContext";
+import { ThemeProvider } from "./components/theme-provider";
 
 import Navbar from "./components/Navbar/Navbar";
 
@@ -17,6 +18,7 @@ import OAuthSuccess from "./pages/OAuth/OAuthSuccess";
 import SetPassword from "./pages/SetPassword/SetPassword";
 import ForgotPassword from "./pages/ForgotPassword/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword/ResetPassword";
+import DesignPreview from "./pages/DesignPreview/DesignPreview";
 
 
 import "./App.css";
@@ -37,11 +39,13 @@ const PublicOnly = ({ children }) => {
 
 function App() {
   return (
-    <AuthProvider>
-      <Router>
-        <AuthWrapper />
-      </Router>
-    </AuthProvider>
+    <ThemeProvider defaultTheme="dark">
+      <AuthProvider>
+        <Router>
+          <AuthWrapper />
+        </Router>
+      </AuthProvider>
+    </ThemeProvider>
   );
 }
 
@@ -54,6 +58,10 @@ const AuthWrapper = () => {
       <div className="app-layout">
         <main className="main-content">
           <Routes>
+            {/* Design preview — public, no auth, used during Phase 2.7 to
+                iterate on the new design system before migrating pages. */}
+            <Route path="/design-preview" element={<DesignPreview />} />
+
             {/* OAuth redirect page */}
             <Route path="/oauth-success" element={<OAuthSuccess />} />
             <Route path="/set-password" element={<SetPassword />} />
