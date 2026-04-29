@@ -5,7 +5,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-d
 import { AuthProvider, AuthContext } from "./context/AuthContext";
 import { ThemeProvider } from "./components/theme-provider";
 
-import Navbar from "./components/Navbar/Navbar";
+import Navbar from "./components/navbar";
 
 import Login from "./pages/Login/Login";
 import Signup from "./pages/Signup/Signup";
