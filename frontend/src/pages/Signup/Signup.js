@@ -36,10 +36,18 @@ const Signup = () => {
   }, [email]);
 
 
+  // Mirror of server-side StrongPasswordValidator regex.
+  // Keep these two in sync if the policy changes.
+  const STRONG_PASSWORD = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{8,128}$/;
+
   const validateStep = () => {
     if (step === 1) {
       if (!name || !email) {
         setMessage("Please fill required fields.");
+        return false;
+      }
+      if (name.trim().length < 2) {
+        setMessage("Name must be at least 2 characters.");
         return false;
       }
     }
@@ -50,6 +58,12 @@ const Signup = () => {
       }
       if (password !== confirmPassword) {
         setMessage("Passwords do not match.");
+        return false;
+      }
+      if (!STRONG_PASSWORD.test(password)) {
+        setMessage(
+          "Password must be 8–128 characters and include an uppercase letter, a lowercase letter, a number, and a special character."
+        );
         return false;
       }
     }
@@ -100,9 +114,18 @@ const Signup = () => {
       login(user, token);
       navigate("/enter-salary");
     } catch (err) {
+      // Server returns { message, fields: { fieldName: "reason" } } on
+      // validation errors — surface the field reasons so the user can fix them.
+      const data = err?.response?.data;
+      const fieldErrors = data?.fields
+        ? Object.entries(data.fields)
+            .map(([field, reason]) => `${field}: ${reason}`)
+            .join("\n")
+        : null;
       const msg =
-        err?.response?.data?.message ||
-        err?.response?.data ||
+        fieldErrors ||
+        data?.message ||
+        (typeof data === "string" ? data : null) ||
         err.message ||
         "Signup failed";
       setMessage(msg);
@@ -215,6 +238,9 @@ const Signup = () => {
                   <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder=" " />
                   <label>Password</label>
                 </div>
+                <small style={{ display: "block", marginTop: "-8px", marginBottom: "12px", opacity: 0.75 }}>
+                  Must be 8–128 chars and include an uppercase letter, a lowercase letter, a number, and a special character.
+                </small>
 
                 <div className="field">
                   <input type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} placeholder=" " />
@@ -254,8 +280,13 @@ const Signup = () => {
                   <label>Enter OTP</label>
                 </div>
 
-                <button type="button" className="btn-primary" disabled={otpLoading} onClick={handleVerifyOtp}>
-                  {otpLoading ? "Verifying..." : "Verify OTP"}
+                <button
+                  type="button"
+                  className="btn-primary"
+                  disabled={otpLoading || otpVerified}
+                  onClick={handleVerifyOtp}
+                >
+                  {otpVerified ? "✓ Verified" : otpLoading ? "Verifying..." : "Verify OTP"}
                 </button>
 
                 <button
