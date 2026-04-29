@@ -43,6 +43,7 @@ const Dashboard = () => {
     category: 'Salary',
     transactionDate: new Date().toISOString().split('T')[0],
   });
+  const [savingIncome, setSavingIncome] = useState(false);
 
   const [modalOpen, setModalOpen] = useState(false);
   const [editing, setEditing] = useState(null);
@@ -119,18 +120,43 @@ const Dashboard = () => {
 
   // ───────── Handlers ─────────
   const handleIncomeSave = async () => {
+    setError(null);
+    const amount = parseFloat(incomeForm.amount);
+    if (!Number.isFinite(amount) || amount <= 0) {
+      setError('Please enter a valid income amount greater than 0.');
+      return;
+    }
+    if (!incomeForm.category?.trim()) {
+      setError('Please enter a source / category.');
+      return;
+    }
+
+    setSavingIncome(true);
     try {
       await transactionService.addTransaction({
         description: 'Monthly Income',
-        amount: parseFloat(incomeForm.amount),
-        category: incomeForm.category,
+        amount,
+        category: incomeForm.category.trim(),
         transactionDate: incomeForm.transactionDate,
         type: 'income',
         userId: user.id,
       });
-      refresh();
-    } catch {
-      setError('Failed to save income.');
+      // Optimistic — flip the gate immediately, then refresh to pull the
+      // server-of-record list so the dashboard renders against real data.
+      setIncomeEntered(true);
+      await refresh();
+    } catch (err) {
+      console.error('Failed to save income:', err);
+      const msg =
+        err?.response?.data?.message ||
+        (err?.response?.status === 401 || err?.response?.status === 403
+          ? 'Your session expired — please sign in again.'
+          : null) ||
+        err?.message ||
+        'Failed to save income. Please try again.';
+      setError(msg);
+    } finally {
+      setSavingIncome(false);
     }
   };
 
@@ -202,41 +228,61 @@ const Dashboard = () => {
                 Enter your monthly income to start. We'll use this to track spending and generate insights.
               </CardDescription>
             </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="income-amount">Income amount</Label>
-                <Input
-                  id="income-amount"
-                  type="number"
-                  placeholder="₹0.00"
-                  value={incomeForm.amount}
-                  onChange={(e) => setIncomeForm({ ...incomeForm, amount: e.target.value })}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="income-category">Source</Label>
-                <Input
-                  id="income-category"
-                  placeholder="Salary"
-                  value={incomeForm.category}
-                  onChange={(e) => setIncomeForm({ ...incomeForm, category: e.target.value })}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="income-date">Date</Label>
-                <Input
-                  id="income-date"
-                  type="date"
-                  value={incomeForm.transactionDate}
-                  onChange={(e) => setIncomeForm({ ...incomeForm, transactionDate: e.target.value })}
-                />
-              </div>
-            </CardContent>
-            <CardFooter>
-              <Button variant="gradient" size="lg" className="w-full" onClick={handleIncomeSave}>
-                Save and continue
-              </Button>
-            </CardFooter>
+            <form
+              onSubmit={(e) => { e.preventDefault(); handleIncomeSave(); }}
+            >
+              <CardContent className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="income-amount">Income amount</Label>
+                  <Input
+                    id="income-amount"
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    placeholder="0.00"
+                    value={incomeForm.amount}
+                    onChange={(e) => setIncomeForm({ ...incomeForm, amount: e.target.value })}
+                    required
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="income-category">Source</Label>
+                  <Input
+                    id="income-category"
+                    placeholder="Salary"
+                    value={incomeForm.category}
+                    onChange={(e) => setIncomeForm({ ...incomeForm, category: e.target.value })}
+                    required
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="income-date">Date</Label>
+                  <Input
+                    id="income-date"
+                    type="date"
+                    value={incomeForm.transactionDate}
+                    onChange={(e) => setIncomeForm({ ...incomeForm, transactionDate: e.target.value })}
+                    required
+                  />
+                </div>
+                {error && (
+                  <div className="px-3 py-2 rounded-md border border-destructive/30 bg-destructive/10 text-destructive text-sm">
+                    {error}
+                  </div>
+                )}
+              </CardContent>
+              <CardFooter>
+                <Button
+                  type="submit"
+                  variant="gradient"
+                  size="lg"
+                  className="w-full"
+                  disabled={savingIncome}
+                >
+                  {savingIncome ? 'Saving…' : 'Save and continue'}
+                </Button>
+              </CardFooter>
+            </form>
           </Card>
         </div>
       </AppLayout>

@@ -1,9 +1,14 @@
 import api from './api';
 
-// Backend now returns Spring Page<Transaction>:
-//   { content: [...], totalElements, totalPages, number, size, ... }
-// We unwrap .content for callers that just want the array.
-// size is capped at 100 server-side.
+// The transactions endpoint is paginated as of backend Phase 2.3 — it
+// returns Spring Page<Transaction>: { content: [...], totalElements, ... }.
+// Older backend builds return a bare array. unwrap() handles both so the
+// frontend doesn't break when running against either revision.
+const unwrap = (data) => {
+  if (Array.isArray(data)) return data;
+  if (data && Array.isArray(data.content)) return data.content;
+  return [];
+};
 
 const transactionService = {
 
@@ -11,14 +16,14 @@ const transactionService = {
     const response = await api.get(`/transactions/user/${userId}`, {
       params: { page: 0, size: 5, sort: 'transactionDate,desc' }
     });
-    return response.data.content || [];
+    return unwrap(response.data);
   },
 
   getAllTransactions: async (userId) => {
     const response = await api.get(`/transactions/user/${userId}`, {
       params: { page: 0, size: 100, sort: 'transactionDate,desc' }
     });
-    return response.data.content || [];
+    return unwrap(response.data);
   },
 
   // Paginated reader for the upcoming Transactions page UI. Returns the full
