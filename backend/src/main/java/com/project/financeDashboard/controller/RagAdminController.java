@@ -2,6 +2,7 @@ package com.project.financeDashboard.controller;
 
 import com.project.financeDashboard.model.User;
 import com.project.financeDashboard.service.UserService;
+import com.project.financeDashboard.service.rag.EmbeddingService;
 import com.project.financeDashboard.service.rag.RagBackfillService;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.slf4j.Logger;
@@ -35,11 +36,14 @@ public class RagAdminController {
 
     /** Optional — only present when rag.enabled=true. */
     private final RagBackfillService backfillService;
+    private final EmbeddingService embeddingService;
     private final UserService userService;
 
     public RagAdminController(@Autowired(required = false) RagBackfillService backfillService,
+                              @Autowired(required = false) EmbeddingService embeddingService,
                               UserService userService) {
         this.backfillService = backfillService;
+        this.embeddingService = embeddingService;
         this.userService = userService;
     }
 
@@ -69,14 +73,19 @@ public class RagAdminController {
     }
 
     /**
-     * Trigger a backfill for the caller. Returns 202 Accepted with the
-     * count of rows that will be processed. The actual embedding work
-     * runs on a dedicated single-thread executor and paces itself; the
-     * client polls /status to see progress.
+     * Trigger a backfill for the caller.
+     *
+     * <p>To avoid the silent-failure trap where the async loop fails on
+     * every embed and the user just sees the badge stuck at 0/N, we
+     * run ONE embed synchronously up front as a smoke test. If that
+     * succeeds, we know the Gemini key + endpoint + dao are working and
+     * we can dispatch the bulk work async. If it fails, return 502
+     * with the actual provider error so the UI can show a useful
+     * message instead of pretending the work was queued.
      */
     @PostMapping("/backfill")
     public ResponseEntity<?> backfill() {
-        if (backfillService == null) {
+        if (backfillService == null || embeddingService == null) {
             return ResponseEntity.status(503).body(Map.of(
                     "message", "RAG is disabled in this build"));
         }
@@ -91,9 +100,25 @@ public class RagAdminController {
         log.info("RAG backfill requested: user={} total={} indexed={} pending={}",
                 userId, st.total(), st.indexed(), st.pending());
 
-        // Fire-and-forget — the @Async method returns immediately. Even
-        // if this user has 0 pending, we still kick off the worker so
-        // the response shape is consistent (it'll just be a no-op).
+        if (st.pending() == 0) {
+            return ResponseEntity.ok(Map.of(
+                    "queued", 0,
+                    "alreadyIndexed", st.indexed(),
+                    "total", st.total(),
+                    "message", "All transactions already indexed"));
+        }
+
+        // Smoke test: prove the embedding path is healthy before kicking
+        // off N async calls that might all fail silently.
+        try {
+            embeddingService.embedDocument("Finora RAG smoke test");
+        } catch (Exception e) {
+            log.warn("RAG backfill smoke-test failed for user={}: {}", userId, e.toString());
+            return ResponseEntity.status(502).body(Map.of(
+                    "message", "Embedding service is unavailable",
+                    "detail", e.getMessage() != null ? e.getMessage() : e.getClass().getSimpleName()));
+        }
+
         backfillService.backfillForUser(userId);
 
         return ResponseEntity.accepted().body(Map.of(

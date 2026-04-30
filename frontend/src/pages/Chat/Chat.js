@@ -129,14 +129,21 @@ const Chat = () => {
       await refreshRagStatus();
     } catch (err) {
       const status = err?.response?.status;
-      setError(
-        status === 429
-          ? 'You can only re-index 5 times per hour. Try again later.'
-          : 'Failed to start re-indexing. Try again.'
-      );
+      const data = err?.response?.data;
+      let msg;
+      if (status === 429) {
+        msg = 'You can only re-index 5 times per hour. Try again later.';
+      } else if (status === 502 && data?.detail) {
+        // Backend smoke test failed — surface the upstream reason so
+        // the user knows it's an API/quota issue, not a frontend bug.
+        msg = `Re-indexing failed: ${data.detail}`;
+      } else if (data?.message) {
+        msg = `Re-indexing failed: ${data.message}`;
+      } else {
+        msg = 'Failed to start re-indexing. Try again.';
+      }
+      setError(msg);
     } finally {
-      // Leave busy=true for ~2s so the spinner is visible even if the
-      // server queues the work instantly. Then the polling loop takes over.
       setTimeout(() => setRagBusy(false), 2000);
     }
   };
