@@ -153,16 +153,8 @@ const Dashboard = () => {
         userId: user.id,
       });
 
-      // Surface the actual response shape so we can diagnose silent
-      // backend issues. If the server didn't echo back a saved
-      // transaction with an id, something went wrong on the backend
-      // even if the HTTP status was 200 — refuse to advance the UI.
-      console.log('[Dashboard] addTransaction response:', saved);
       if (!saved || typeof saved !== 'object' || !saved.id) {
-        const sample = saved == null ? String(saved) :
-          typeof saved === 'string' ? `"${saved.slice(0, 80)}"` :
-          JSON.stringify(saved).slice(0, 120);
-        throw new Error(`Server returned an unexpected response (got ${sample}). Open the Network tab → POST /transactions/user/... → Response, and share what the body shows.`);
+        throw new Error('Failed to save income. Please try again.');
       }
 
       // Lock the gate open via the sticky ref so a subsequent refresh

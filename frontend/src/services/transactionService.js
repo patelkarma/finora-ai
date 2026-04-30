@@ -37,10 +37,6 @@ const transactionService = {
 
   addTransaction: async (transaction) => {
     const response = await api.post(`/transactions/user/${transaction.userId}`, transaction);
-    // Log the full envelope for diagnosis. The diagnostic logging stays
-    // for now while we resolve the silent-failure bug on Render.
-    console.log('[transactionService.addTransaction] status=%d data=%o headers=%o',
-      response.status, response.data, response.headers);
     return response.data;
   },
 
