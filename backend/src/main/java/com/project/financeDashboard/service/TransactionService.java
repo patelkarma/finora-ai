@@ -1,15 +1,18 @@
 package com.project.financeDashboard.service;
 
 import com.project.financeDashboard.config.RedisCacheConfig;
+import com.project.financeDashboard.event.TransactionSavedEvent;
 import com.project.financeDashboard.model.Transaction;
 import com.project.financeDashboard.model.User;
 import com.project.financeDashboard.repository.TransactionRepository;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
@@ -27,9 +30,12 @@ import java.util.Optional;
 public class TransactionService {
 
     private final TransactionRepository transactionRepository;
+    private final ApplicationEventPublisher events;
 
-    public TransactionService(TransactionRepository transactionRepository) {
+    public TransactionService(TransactionRepository transactionRepository,
+                              ApplicationEventPublisher events) {
         this.transactionRepository = transactionRepository;
+        this.events = events;
     }
 
     @Cacheable(value = RedisCacheConfig.CACHE_TRANSACTIONS, key = "#user.id")
@@ -56,9 +62,19 @@ public class TransactionService {
         return transactionRepository.findByUserId(userId, pageable);
     }
 
+    /**
+     * @Transactional is required so the event publish below participates
+     * in a transaction context — the RAG indexer's
+     * @TransactionalEventListener(AFTER_COMMIT) silently drops events
+     * when there's no active tx. Without this, embeddings would never
+     * be written.
+     */
+    @Transactional
     @CacheEvict(value = RedisCacheConfig.CACHE_TRANSACTIONS, allEntries = true)
     public Transaction saveTransaction(@NonNull Transaction transaction) {
-        return transactionRepository.save(transaction);
+        Transaction saved = transactionRepository.save(transaction);
+        events.publishEvent(new TransactionSavedEvent(saved));
+        return saved;
     }
 
     public Optional<Transaction> findById(@NonNull Long id) {
