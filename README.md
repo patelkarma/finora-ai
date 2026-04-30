@@ -20,6 +20,47 @@
 
 ---
 
+## Screenshots
+
+<table>
+  <tr>
+    <td width="50%"><img src="docs/screenshots/dashboard-hero.png" alt="Dashboard hero — net cashflow, income, expenses, AI insight, top spending"/></td>
+    <td width="50%"><img src="docs/screenshots/dashboard-ai-cards.png" alt="Anomalies card flagging unusual spending; 30-day cash-flow forecast line chart; detected subscriptions"/></td>
+  </tr>
+  <tr>
+    <td><b>Hero stats + AI insight</b><br/>Net cashflow / Income / Expenses tiles, LLM-generated narrative insight, top spending categories breakdown.</td>
+    <td><b>Anomalies + Forecast + Subscriptions</b><br/>Per-category z-score anomaly detection, 30-day projected balance line, auto-detected recurring expenses.</td>
+  </tr>
+  <tr>
+    <td><img src="docs/screenshots/chat-streaming.png" alt="Ask Finora chat page — streaming reply with blinking cursor, RAG indexed badge"/></td>
+    <td><img src="docs/screenshots/transactions.png" alt="Transactions list grouped by date with income/expense filter pill"/></td>
+  </tr>
+  <tr>
+    <td><b>Conversational chat</b><br/>SSE streaming replies grounded in your real transactions via pgvector RAG. The badge shows how many rows are indexed.</td>
+    <td><b>Transactions</b><br/>Date-grouped list (Today / Yesterday / relative), animated filter pill, edit-in-place modal.</td>
+  </tr>
+</table>
+
+---
+
+## Try it in 60 seconds
+
+```text
+1. Sign up at https://finora-frontend-smoky.vercel.app/signup → enter the OTP
+2. Set your monthly income on the Profile page
+3. Add 3-4 transactions across different categories
+4. Wait ~10 s for the live RAG indexer to embed them (badge: "N/N indexed")
+5. Open Ask AI → "what did I spend on food?" — watch tokens stream in
+6. Reload the dashboard — Anomalies / Forecast / Subscriptions cards
+   appear automatically once there's enough data to compute against
+```
+
+> **Demo seed:** if you want all four AI cards to populate immediately, the
+> repo includes an `[ai/insights/seed-demo]` admin endpoint that creates 38
+> realistic transactions over 90 days. See [`backend/.../DemoSeedController.java`](./backend/src/main/java/com/project/financeDashboard/controller/DemoSeedController.java).
+
+---
+
 ## Highlights
 
 ### Auth & security
