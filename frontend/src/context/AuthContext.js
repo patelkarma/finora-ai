@@ -87,16 +87,23 @@ export const AuthProvider = ({ children }) => {
       return;
     }
 
-    // On OAuth callback pages, clear any stale token and let the page handle its own auth
+    // On OAuth callback pages, clear any stale token+user and let the
+    // page handle its own auth. We clear `user` too so the global
+    // interceptor's wasAuthenticated guard treats subsequent 401s as
+    // "not yet authenticated" rather than "session expired."
     const path = window.location.pathname;
     if (path.startsWith('/oauth-success') || path.startsWith('/set-password') || path.startsWith('/create-password')) {
       localStorage.removeItem("token");
+      localStorage.removeItem("user");
       setLoading(false);
       return;
     }
 
     loginWithToken(token)
-      .catch(() => { localStorage.removeItem("token"); })
+      .catch(() => {
+        localStorage.removeItem("token");
+        localStorage.removeItem("user");
+      })
       .finally(() => setLoading(false));
   }, [loginWithToken]);
 
