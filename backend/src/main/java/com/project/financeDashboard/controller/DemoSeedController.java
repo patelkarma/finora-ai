@@ -72,6 +72,21 @@ public class DemoSeedController {
         }
         User user = userOpt.get();
         LocalDate today = LocalDate.now();
+
+        // Idempotency: wipe any prior demo rows for this user before seeding
+        // fresh. A second click in DevTools shouldn't double the dataset and
+        // make every anomaly / subscription appear twice.
+        int wiped = 0;
+        for (Transaction t : transactionRepository.findByUser(user)) {
+            if (t.getDescription() != null && t.getDescription().startsWith(DEMO_PREFIX)) {
+                transactionService.deleteTransaction(t.getId());
+                wiped++;
+            }
+        }
+        if (wiped > 0) {
+            log.info("Demo seed: user={} wiped {} prior demo rows before re-seed", user.getId(), wiped);
+        }
+
         int created = 0;
 
         // ---- Income: 3 monthly salaries (today, -30d, -60d) ----
