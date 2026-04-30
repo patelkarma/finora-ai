@@ -70,9 +70,13 @@ public class CashFlowForecastService {
         User user = userOpt.get();
 
         List<Transaction> all = transactionService.getTransactionsByUserId(userId);
+        // Salary amount: prefer user.salary (explicitly set in profile);
+        // fall back to the most recent income transaction's amount so
+        // a user who entered an income without setting their profile
+        // salary still gets a realistic forecast.
         BigDecimal salary = user.getSalary() != null
                 ? BigDecimal.valueOf(user.getSalary())
-                : BigDecimal.ZERO;
+                : inferSalaryAmount(all);
 
         int salaryDom = inferSalaryDayOfMonth(all);
         BigDecimal dailyDiscretionary = computeDailyDiscretionary(all);
@@ -105,6 +109,21 @@ public class CashFlowForecastService {
         }
 
         return series;
+    }
+
+    /**
+     * Most recent income transaction's amount. Used as a fallback when
+     * user.salary isn't explicitly set. Returns ZERO if the user has
+     * no income history yet.
+     */
+    private static BigDecimal inferSalaryAmount(List<Transaction> all) {
+        if (all == null || all.isEmpty()) return BigDecimal.ZERO;
+        return all.stream()
+                .filter(t -> "income".equalsIgnoreCase(t.getType()))
+                .filter(t -> t.getAmount() != null && t.getTransactionDate() != null)
+                .max((a, b) -> a.getTransactionDate().compareTo(b.getTransactionDate()))
+                .map(Transaction::getAmount)
+                .orElse(BigDecimal.ZERO);
     }
 
     /**
