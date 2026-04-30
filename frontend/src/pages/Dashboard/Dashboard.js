@@ -4,6 +4,7 @@ import {
   AlertTriangle,
   ArrowDownRight,
   ArrowUpRight,
+  LineChart as LineChartIcon,
   Plus,
   Repeat,
   Sparkles,
@@ -16,6 +17,17 @@ import transactionService from '../../services/transactionService';
 import aiService from '../../services/aiService';
 import subscriptionService from '../../services/subscriptionService';
 import anomalyService from '../../services/anomalyService';
+import forecastService from '../../services/forecastService';
+import {
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  Filler,
+  Tooltip,
+} from 'chart.js';
+import { Line } from 'react-chartjs-2';
 import { AppLayout } from '../../components/app-layout';
 import { Button } from '../../components/ui/button';
 import {
@@ -31,6 +43,8 @@ import { Label } from '../../components/ui/label';
 import { MoneyValue } from '../../components/ui/money-value';
 import { cn } from '../../lib/utils';
 
+ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Filler, Tooltip);
+
 const Dashboard = () => {
   const { user, loading } = useContext(AuthContext);
   const navigate = useNavigate();
@@ -43,6 +57,7 @@ const Dashboard = () => {
   const [generatingInsight, setGeneratingInsight] = useState(false);
   const [subscriptions, setSubscriptions] = useState([]);
   const [anomalies, setAnomalies] = useState([]);
+  const [forecast, setForecast] = useState([]);
 
   const [incomeForm, setIncomeForm] = useState({
     amount: '',
@@ -96,6 +111,12 @@ const Dashboard = () => {
       try {
         const anom = await anomalyService.getUserAnomalies(user.id);
         setAnomalies(anom);
+      } catch {/* ignore */}
+
+      // Best-effort fetch for the 30-day forecast; chart hides if empty.
+      try {
+        const f = await forecastService.getUserForecast(user.id, 30);
+        setForecast(f);
       } catch {/* ignore */}
     } catch (err) {
       setError('Failed to load transactions. Please try again.');
@@ -403,6 +424,14 @@ const Dashboard = () => {
         </section>
       )}
 
+      {/* 30-day cash-flow forecast — combines salary cadence, recurring
+          subscriptions, and discretionary daily spend into one trend line. */}
+      {forecast.length > 0 && (
+        <section className="mb-8">
+          <ForecastCard points={forecast} />
+        </section>
+      )}
+
       {/* Subscriptions — only visible when at least one was detected. */}
       {subscriptions.length > 0 && (
         <section className="mb-8">
@@ -640,6 +669,110 @@ function CategoryBreakdownCard({ categories, totalExpense }) {
             })}
           </ul>
         )}
+      </CardContent>
+    </Card>
+  );
+}
+
+function ForecastCard({ points }) {
+  const last = points[points.length - 1];
+  const projectedNet = last ? parseFloat(last.cumulative) : 0;
+  const isNegative = projectedNet < 0;
+
+  // chart.js dataset + options. Theme-friendly: line color depends on
+  // whether the projected end-of-window is positive (gain) or negative
+  // (loss). Filled area below the line for visual weight.
+  const labels = points.map((p) => {
+    const d = new Date(p.date);
+    return d.toLocaleDateString('en-IN', { day: 'numeric', month: 'short' });
+  });
+  const data = points.map((p) => parseFloat(p.cumulative));
+
+  // Resolve CSS-var-driven colors at render time so dark/light themes
+  // both look right. Fall back to fixed hex if the var isn't readable.
+  const lineColor = isNegative ? 'hsl(0, 70%, 60%)' : 'hsl(160, 70%, 45%)';
+  const fillColor = isNegative ? 'hsla(0, 70%, 60%, 0.10)' : 'hsla(160, 70%, 45%, 0.12)';
+
+  const chartData = {
+    labels,
+    datasets: [
+      {
+        label: 'Projected balance',
+        data,
+        borderColor: lineColor,
+        backgroundColor: fillColor,
+        fill: true,
+        tension: 0.35,
+        pointRadius: 0,
+        pointHoverRadius: 5,
+        borderWidth: 2,
+      },
+    ],
+  };
+
+  const options = {
+    responsive: true,
+    maintainAspectRatio: false,
+    interaction: { mode: 'index', intersect: false },
+    plugins: {
+      legend: { display: false },
+      tooltip: {
+        callbacks: {
+          title: (items) => items[0]?.label ?? '',
+          label: (ctx) => {
+            const p = points[ctx.dataIndex];
+            const lines = [`Cumulative: ₹${parseFloat(p.cumulative).toLocaleString('en-IN')}`];
+            if (parseFloat(p.income) > 0) lines.push(`Income: +₹${parseFloat(p.income).toLocaleString('en-IN')}`);
+            if (parseFloat(p.subscription) > 0) lines.push(`Subscriptions: -₹${parseFloat(p.subscription).toLocaleString('en-IN')}`);
+            if (parseFloat(p.discretionary) > 0) lines.push(`Discretionary: -₹${parseFloat(p.discretionary).toLocaleString('en-IN')}`);
+            return lines;
+          },
+        },
+      },
+    },
+    scales: {
+      x: {
+        grid: { display: false },
+        ticks: { maxRotation: 0, autoSkipPadding: 16, color: 'rgba(120,120,135,0.7)' },
+      },
+      y: {
+        grid: { color: 'rgba(120,120,135,0.12)' },
+        ticks: {
+          color: 'rgba(120,120,135,0.7)',
+          callback: (v) => '₹' + Number(v).toLocaleString('en-IN'),
+        },
+      },
+    },
+  };
+
+  return (
+    <Card>
+      <CardHeader className="flex flex-row items-start justify-between space-y-0">
+        <div>
+          <CardDescription className="flex items-center gap-2">
+            <LineChartIcon className="h-4 w-4 text-zinc-400" /> 30-day forecast
+          </CardDescription>
+          <CardTitle className="text-lg">Projected cash flow</CardTitle>
+        </div>
+        <div className="text-right">
+          <p className="text-xs uppercase tracking-wide text-zinc-500 dark:text-zinc-500">
+            End of window
+          </p>
+          <MoneyValue
+            value={projectedNet}
+            colorize
+            showSign="always"
+            className="text-lg font-semibold"
+          />
+        </div>
+      </CardHeader>
+      <CardContent>
+        <div className="h-56">
+          <Line data={chartData} options={options} />
+        </div>
+        <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-3">
+          Combines your stated salary on its usual day, recurring subscription charges, and your average daily discretionary spend.
+        </p>
       </CardContent>
     </Card>
   );
