@@ -217,6 +217,7 @@ errors — are documented as ADRs in [`docs/adr/`](./docs/adr/).
 | [0004](./docs/adr/0004-async-embedding-via-transactional-event.md) | `@TransactionalEventListener(AFTER_COMMIT)` async embedding | HTTP save returns instantly; embedding only fires after commit |
 | [0005](./docs/adr/0005-sse-streaming-via-fetch-not-eventsource.md) | `fetch + ReadableStream` for SSE | `EventSource` can't carry the `Authorization` header; rolled our own SSE parser instead |
 | [0006](./docs/adr/0006-per-category-z-score-anomaly-detection.md) | Per-category z-score for anomalies | Global framing flags rent forever; per-category keeps signal honest |
+| [0007](./docs/adr/0007-extracted-ai-service-over-rabbitmq.md) | Extracted `ai-service` over RabbitMQ | Slow Gemini calls no longer pin a backend request thread; explicit reply queue + correlationId for visibility in `rabbitmq-management` |
 
 ---
 
@@ -345,7 +346,8 @@ docs/
 - **Phase 1** — OpenAPI, Actuator, Bean Validation, password policy + reset, LLM provider abstraction with circuit breaker, Flyway, real tests, env examples ✅
 - **Phase 2** — Redis caching ✅, Bucket4j rate limiting ✅, pagination + composite indexes ✅, Tailwind + shadcn UI rebuild ✅, Sentry FE+BE ✅, k6 load tests ✅
 - **Phase 3** — Conversational AI chat with SSE streaming ✅, RAG over user transactions (pgvector + Gemini embeddings) ✅, subscription detector ✅, anomaly detection ✅, cash-flow forecast ✅
-- **Phase 4 (current)** — ADRs ✅, Mermaid sequence diagrams ✅, performance numbers in README ✅, demo Loom (TODO), `ai-service` extracted over RabbitMQ (TODO)
+- **Phase 3.4** — `ai-service` extracted over RabbitMQ ✅ (insight flow; embedding + chat to follow incrementally)
+- **Phase 4 (current)** — ADRs ✅, Mermaid sequence diagrams ✅, performance numbers in README ✅, demo Loom (TODO)
 
 ---
 

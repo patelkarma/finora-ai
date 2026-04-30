@@ -135,6 +135,14 @@
     		<artifactId>spring-boot-starter-cache</artifactId>
 		</dependency>
 
+		<!-- Spring AMQP — RabbitMQ producer for the extracted ai-service.
+		     Backend publishes InsightRequest, ai-service consumes it,
+		     publishes InsightResponse back, backend correlates by id. -->
+		<dependency>
+    		<groupId>org.springframework.boot</groupId>
+    		<artifactId>spring-boot-starter-amqp</artifactId>
+		</dependency>
+
 		<!-- Bucket4j: token-bucket rate limiting on auth + LLM endpoints -->
 		<dependency>
     		<groupId>com.bucket4j</groupId>

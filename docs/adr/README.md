@@ -14,6 +14,7 @@ The format is a stripped-down [Nygard ADR](https://cognitect.com/blog/2011/11/15
 | [0004](./0004-async-embedding-via-transactional-event.md) | Async embedding via `@TransactionalEventListener(AFTER_COMMIT)` | Accepted |
 | [0005](./0005-sse-streaming-via-fetch-not-eventsource.md) | SSE streaming via `fetch + ReadableStream` (not `EventSource`) | Accepted |
 | [0006](./0006-per-category-z-score-anomaly-detection.md) | Per-category z-score for anomaly detection | Accepted |
+| [0007](./0007-extracted-ai-service-over-rabbitmq.md) | Extracted `ai-service` over RabbitMQ | Accepted |
 
 ## When to write an ADR
 

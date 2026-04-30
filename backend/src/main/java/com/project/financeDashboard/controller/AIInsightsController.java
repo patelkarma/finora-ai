@@ -1,8 +1,13 @@
 package com.project.financeDashboard.controller;
 
+import com.project.financeDashboard.messaging.InsightProducer;
+import com.project.financeDashboard.messaging.InsightResponse;
 import com.project.financeDashboard.model.Insight;
 import com.project.financeDashboard.model.User;
 import com.project.financeDashboard.service.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -12,26 +17,33 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import java.util.*;
+import java.util.concurrent.TimeoutException;
 
 @RestController
 @RequestMapping("/api/ai")
 @Tag(name = "AI Insights", description = "Generate and retrieve LLM-powered financial insights")
 public class AIInsightsController {
 
+    private static final Logger log = LoggerFactory.getLogger(AIInsightsController.class);
+
     private final InsightsService insightsService;
     private final UserService userService;
     private final TransactionService transactionService;
     private final BudgetService budgetService;
+    /** Optional — present only when messaging.enabled=true. */
+    private final InsightProducer insightProducer;
 
     public AIInsightsController(
             InsightsService insightsService,
             UserService userService,
             TransactionService transactionService,
-            BudgetService budgetService) {
+            BudgetService budgetService,
+            @Autowired(required = false) InsightProducer insightProducer) {
         this.insightsService = insightsService;
         this.userService = userService;
         this.transactionService = transactionService;
         this.budgetService = budgetService;
+        this.insightProducer = insightProducer;
     }
 
     private Optional<User> getAuthenticatedUser() {
@@ -49,10 +61,43 @@ public class AIInsightsController {
         try {
             User user = authUser.get();
             String prompt = buildPrompt(user);
-            Insight saved = insightsService.generateAndSaveAIInsight(user, prompt);
+
+            // When messaging.enabled=true the work goes via RabbitMQ to the
+            // ai-service worker. The HTTP thread blocks on the reply but
+            // the LLM call itself runs out-of-process — a slow or stuck
+            // Gemini in ai-service can no longer pin THIS service's
+            // request thread for the whole duration.
+            // When the producer bean is absent (messaging disabled, or
+            // ai-service down) we fall through to the in-process path so
+            // the feature still works. This is the textbook strangler-fig
+            // pattern for incrementally extracting a microservice.
+            Insight saved = (insightProducer != null)
+                    ? generateViaMessaging(user, prompt)
+                    : insightsService.generateAndSaveAIInsight(user, prompt);
             return ResponseEntity.ok(saved);
         } catch (Exception e) {
             return ResponseEntity.internalServerError().body("Error generating AI insight: " + e.getMessage());
+        }
+    }
+
+    private Insight generateViaMessaging(User user, String prompt) {
+        try {
+            InsightResponse reply = insightProducer.requestAndWait(user.getId(), prompt, 30);
+            String text = (reply.error() == null && reply.text() != null && !reply.text().isBlank())
+                    ? reply.text()
+                    : "Our AI assistant is temporarily unavailable. Please try again in a few minutes.";
+
+            Insight insight = new Insight();
+            insight.setUser(user);
+            insight.setMessage(text);
+            insight.setRead(false);
+            return insightsService.saveInsight(insight);
+        } catch (TimeoutException te) {
+            log.warn("Timed out waiting for ai-service reply for user={}: {}",
+                    user.getId(), te.getMessage());
+            // Fall back to the in-process path so the user still gets an
+            // insight, just one that bypasses the broker.
+            return insightsService.generateAndSaveAIInsight(user, prompt);
         }
     }
 
