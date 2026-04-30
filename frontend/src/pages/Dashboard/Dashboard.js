@@ -4,6 +4,7 @@ import {
   ArrowDownRight,
   ArrowUpRight,
   Plus,
+  Repeat,
   Sparkles,
   TrendingUp,
   Wallet,
@@ -12,6 +13,7 @@ import { AuthContext } from '../../context/AuthContext';
 import { useNavigate, Link } from 'react-router-dom';
 import transactionService from '../../services/transactionService';
 import aiService from '../../services/aiService';
+import subscriptionService from '../../services/subscriptionService';
 import { AppLayout } from '../../components/app-layout';
 import { Button } from '../../components/ui/button';
 import {
@@ -37,6 +39,7 @@ const Dashboard = () => {
   const [incomeEntered, setIncomeEntered] = useState(false);
   const [latestInsight, setLatestInsight] = useState(null);
   const [generatingInsight, setGeneratingInsight] = useState(false);
+  const [subscriptions, setSubscriptions] = useState([]);
 
   const [incomeForm, setIncomeForm] = useState({
     amount: '',
@@ -77,6 +80,13 @@ const Dashboard = () => {
         const insights = await aiService.fetchInsights(user.id, { size: 1 });
         if (insights.length) setLatestInsight(insights[0]);
       } catch {/* ignore — insight is optional */}
+
+      // Best-effort fetch for detected subscriptions; the card hides
+      // itself when the list is empty so a failure here is invisible.
+      try {
+        const subs = await subscriptionService.getUserSubscriptions(user.id);
+        setSubscriptions(subs);
+      } catch {/* ignore — subscriptions are decorative */}
     } catch (err) {
       setError('Failed to load transactions. Please try again.');
     } finally {
@@ -375,6 +385,13 @@ const Dashboard = () => {
         <CategoryBreakdownCard categories={byCategory} totalExpense={totalExpense} />
       </section>
 
+      {/* Subscriptions — only visible when at least one was detected. */}
+      {subscriptions.length > 0 && (
+        <section className="mb-8">
+          <SubscriptionsCard subscriptions={subscriptions} />
+        </section>
+      )}
+
       {/* Recent transactions */}
       <section className="mb-8">
         <div className="flex items-center justify-between mb-4">
@@ -608,6 +625,93 @@ function CategoryBreakdownCard({ categories, totalExpense }) {
       </CardContent>
     </Card>
   );
+}
+
+function SubscriptionsCard({ subscriptions }) {
+  // Estimated monthly cost across all detected subscriptions, normalized
+  // by period (weekly × 4.33, biweekly × 2.17, yearly ÷ 12).
+  const monthlyTotal = subscriptions.reduce((sum, s) => {
+    const amount = parseFloat(s.amount) || 0;
+    const factor = {
+      WEEKLY: 4.33,
+      BIWEEKLY: 2.17,
+      MONTHLY: 1,
+      YEARLY: 1 / 12,
+    }[s.period] ?? 1;
+    return sum + amount * factor;
+  }, 0);
+
+  const top = subscriptions.slice(0, 6);
+
+  return (
+    <Card>
+      <CardHeader className="flex flex-row items-start justify-between space-y-0">
+        <div>
+          <CardDescription className="flex items-center gap-2">
+            <Repeat className="h-4 w-4 text-zinc-400" /> Detected subscriptions
+          </CardDescription>
+          <CardTitle className="text-lg">
+            {subscriptions.length} recurring
+          </CardTitle>
+        </div>
+        <div className="text-right">
+          <p className="text-xs uppercase tracking-wide text-zinc-500 dark:text-zinc-500">
+            Est. monthly
+          </p>
+          <MoneyValue value={monthlyTotal} className="text-lg font-semibold" />
+        </div>
+      </CardHeader>
+      <CardContent>
+        <ul className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-2.5">
+          {top.map((s, i) => (
+            <motion.li
+              key={`${s.name}-${s.amount}-${i}`}
+              initial={{ opacity: 0, y: 4 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: i * 0.04 }}
+              className="flex items-center justify-between gap-3 py-1.5 border-b border-zinc-100 dark:border-zinc-800/60 last:border-0"
+            >
+              <div className="min-w-0 flex-1">
+                <p className="text-sm font-medium text-zinc-900 dark:text-zinc-50 truncate">
+                  {s.name}
+                </p>
+                <p className="text-xs text-zinc-500 dark:text-zinc-400">
+                  {periodLabel(s.period)} · {s.occurrences}× ·{' '}
+                  <span title="next expected">
+                    next {formatShortDate(s.nextExpected)}
+                  </span>
+                </p>
+              </div>
+              <MoneyValue
+                value={s.amount}
+                className="text-sm text-zinc-700 dark:text-zinc-300 tabular-nums whitespace-nowrap"
+              />
+            </motion.li>
+          ))}
+        </ul>
+        {subscriptions.length > top.length && (
+          <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-3 text-center">
+            +{subscriptions.length - top.length} more
+          </p>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
+function periodLabel(period) {
+  return {
+    WEEKLY: 'Weekly',
+    BIWEEKLY: 'Bi-weekly',
+    MONTHLY: 'Monthly',
+    YEARLY: 'Yearly',
+  }[period] ?? period;
+}
+
+function formatShortDate(iso) {
+  if (!iso) return '—';
+  const d = new Date(iso);
+  return d.toLocaleDateString('en-IN', { day: 'numeric', month: 'short' });
 }
 
 function EditModal({ form, onChange, onClose, onSave, onDelete }) {
