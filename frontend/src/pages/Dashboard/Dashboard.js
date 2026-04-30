@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useContext, useCallback, useMemo, useRef } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import {
+  AlertTriangle,
   ArrowDownRight,
   ArrowUpRight,
   Plus,
@@ -14,6 +15,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import transactionService from '../../services/transactionService';
 import aiService from '../../services/aiService';
 import subscriptionService from '../../services/subscriptionService';
+import anomalyService from '../../services/anomalyService';
 import { AppLayout } from '../../components/app-layout';
 import { Button } from '../../components/ui/button';
 import {
@@ -40,6 +42,7 @@ const Dashboard = () => {
   const [latestInsight, setLatestInsight] = useState(null);
   const [generatingInsight, setGeneratingInsight] = useState(false);
   const [subscriptions, setSubscriptions] = useState([]);
+  const [anomalies, setAnomalies] = useState([]);
 
   const [incomeForm, setIncomeForm] = useState({
     amount: '',
@@ -87,6 +90,13 @@ const Dashboard = () => {
         const subs = await subscriptionService.getUserSubscriptions(user.id);
         setSubscriptions(subs);
       } catch {/* ignore — subscriptions are decorative */}
+
+      // Best-effort fetch for spending anomalies; banner hides itself
+      // when the list is empty.
+      try {
+        const anom = await anomalyService.getUserAnomalies(user.id);
+        setAnomalies(anom);
+      } catch {/* ignore */}
     } catch (err) {
       setError('Failed to load transactions. Please try again.');
     } finally {
@@ -385,6 +395,14 @@ const Dashboard = () => {
         <CategoryBreakdownCard categories={byCategory} totalExpense={totalExpense} />
       </section>
 
+      {/* Anomalies — flagged spending that's well outside normal range
+          for its category. Only renders if anything was flagged. */}
+      {anomalies.length > 0 && (
+        <section className="mb-8">
+          <AnomaliesCard anomalies={anomalies} />
+        </section>
+      )}
+
       {/* Subscriptions — only visible when at least one was detected. */}
       {subscriptions.length > 0 && (
         <section className="mb-8">
@@ -621,6 +639,96 @@ function CategoryBreakdownCard({ categories, totalExpense }) {
               );
             })}
           </ul>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
+function AnomaliesCard({ anomalies }) {
+  const severeCount = anomalies.filter((a) => a.severity === 'SEVERE').length;
+  const top = anomalies.slice(0, 5);
+  const accent = severeCount > 0 ? 'destructive' : 'amber';
+
+  return (
+    <Card
+      className={cn(
+        'overflow-hidden border',
+        accent === 'destructive'
+          ? 'border-destructive/30 bg-destructive/5'
+          : 'border-amber-500/30 bg-amber-500/5'
+      )}
+    >
+      <CardHeader className="flex flex-row items-start justify-between space-y-0">
+        <div className="flex items-start gap-3">
+          <div
+            className={cn(
+              'h-9 w-9 rounded-lg grid place-items-center flex-shrink-0',
+              accent === 'destructive'
+                ? 'bg-destructive/15 text-destructive'
+                : 'bg-amber-500/15 text-amber-600 dark:text-amber-400'
+            )}
+          >
+            <AlertTriangle className="h-4 w-4" />
+          </div>
+          <div>
+            <CardDescription>Unusual spending</CardDescription>
+            <CardTitle className="text-lg">
+              {anomalies.length} flagged
+              {severeCount > 0 && (
+                <span className="text-destructive ml-2 text-sm font-normal">
+                  ({severeCount} severe)
+                </span>
+              )}
+            </CardTitle>
+          </div>
+        </div>
+      </CardHeader>
+      <CardContent>
+        <ul className="space-y-2">
+          {top.map((a, i) => (
+            <motion.li
+              key={a.transactionId ?? i}
+              initial={{ opacity: 0, y: 4 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: i * 0.04 }}
+              className="flex items-center justify-between gap-3 py-1.5 border-b border-zinc-200/60 dark:border-zinc-800/60 last:border-0"
+            >
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center gap-2">
+                  <p className="text-sm font-medium text-zinc-900 dark:text-zinc-50 truncate">
+                    {a.description}
+                  </p>
+                  {a.severity === 'SEVERE' && (
+                    <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium uppercase tracking-wide bg-destructive/15 text-destructive">
+                      severe
+                    </span>
+                  )}
+                </div>
+                <p
+                  className="text-xs text-zinc-500 dark:text-zinc-400"
+                  title={`${a.zScore}σ above category average`}
+                >
+                  {a.category} · {formatShortDate(a.transactionDate)} · usually around{' '}
+                  <MoneyValue value={a.categoryMean} className="inline" />
+                </p>
+              </div>
+              <MoneyValue
+                value={a.amount}
+                className={cn(
+                  'text-sm font-semibold tabular-nums whitespace-nowrap',
+                  a.severity === 'SEVERE'
+                    ? 'text-destructive'
+                    : 'text-amber-600 dark:text-amber-400'
+                )}
+              />
+            </motion.li>
+          ))}
+        </ul>
+        {anomalies.length > top.length && (
+          <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-3 text-center">
+            +{anomalies.length - top.length} more
+          </p>
         )}
       </CardContent>
     </Card>
