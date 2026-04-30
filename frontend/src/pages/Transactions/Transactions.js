@@ -23,6 +23,8 @@ import {
 import { Input } from '../../components/ui/input';
 import { Label } from '../../components/ui/label';
 import { MoneyValue } from '../../components/ui/money-value';
+import { ConfirmDialog } from '../../components/ui/confirm-dialog';
+import { useToast } from '../../components/ui/toast';
 import { cn } from '../../lib/utils';
 
 const Transactions = () => {
@@ -38,6 +40,9 @@ const Transactions = () => {
   const [modalOpen, setModalOpen] = useState(false);
   const [editing, setEditing] = useState(null);
   const [saving, setSaving] = useState(false);
+  const [pendingDelete, setPendingDelete] = useState(null);
+  const [deleting, setDeleting] = useState(false);
+  const toast = useToast();
   const [form, setForm] = useState({
     description: '',
     amount: '',
@@ -117,14 +122,23 @@ const Transactions = () => {
     setModalOpen(true);
   };
 
-  const handleDelete = async (id, e) => {
+  const handleDelete = (t, e) => {
     e?.stopPropagation();
-    if (!window.confirm('Delete this transaction?')) return;
+    setPendingDelete(t);
+  };
+
+  const confirmDelete = async () => {
+    if (!pendingDelete) return;
+    setDeleting(true);
     try {
-      await transactionService.deleteTransaction(id);
+      await transactionService.deleteTransaction(pendingDelete.id);
+      toast.success('Transaction deleted');
+      setPendingDelete(null);
       fetchTransactions();
     } catch {
-      setError('Failed to delete transaction.');
+      toast.error('Failed to delete transaction.');
+    } finally {
+      setDeleting(false);
     }
   };
 
@@ -151,8 +165,10 @@ const Transactions = () => {
       };
       if (editing) {
         await transactionService.updateTransaction(editing.id, payload);
+        toast.success('Transaction updated');
       } else {
         await transactionService.addTransaction({ ...payload, userId: user.id });
+        toast.success('Transaction added');
       }
       setModalOpen(false);
       fetchTransactions();
@@ -309,7 +325,7 @@ const Transactions = () => {
                           <Pencil className="h-3.5 w-3.5" />
                         </button>
                         <button
-                          onClick={(e) => handleDelete(t.id, e)}
+                          onClick={(e) => handleDelete(t, e)}
                           className="h-8 w-8 grid place-items-center rounded hover:bg-destructive/10 text-zinc-500 hover:text-destructive"
                           aria-label="Delete"
                         >
@@ -339,6 +355,21 @@ const Transactions = () => {
           />
         )}
       </AnimatePresence>
+
+      <ConfirmDialog
+        open={!!pendingDelete}
+        title="Delete this transaction?"
+        description={
+          pendingDelete
+            ? `${pendingDelete.description || pendingDelete.category} — ₹${pendingDelete.amount} on ${pendingDelete.transactionDate}. This cannot be undone.`
+            : null
+        }
+        confirmLabel="Delete"
+        variant="destructive"
+        loading={deleting}
+        onConfirm={confirmDelete}
+        onCancel={() => !deleting && setPendingDelete(null)}
+      />
     </AppLayout>
   );
 };

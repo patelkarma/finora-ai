@@ -10,6 +10,7 @@ import {
   User,
   LogOut,
   Settings,
+  Shield,
   Menu,
   X,
 } from 'lucide-react';
@@ -174,6 +175,12 @@ export default function Sidebar() {
                   >
                     <Settings className="h-4 w-4" /> Settings
                   </button>
+                  <button
+                    onClick={() => { setProfileOpen(false); navigate('/privacy'); }}
+                    className="w-full flex items-center gap-2 px-3 py-2 text-sm text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800/60"
+                  >
+                    <Shield className="h-4 w-4" /> Privacy
+                  </button>
                   <div className="my-1 border-t border-zinc-200 dark:border-zinc-800" />
                   <button
                     onClick={handleLogout}
@@ -247,6 +254,12 @@ export default function Sidebar() {
                   className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800/60"
                 >
                   <User className="h-4 w-4" /> Profile
+                </button>
+                <button
+                  onClick={() => { setDrawerOpen(false); navigate('/privacy'); }}
+                  className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800/60"
+                >
+                  <Shield className="h-4 w-4" /> Privacy
                 </button>
                 <button
                   onClick={handleLogout}

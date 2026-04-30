@@ -4,6 +4,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-d
 
 import { AuthProvider, AuthContext } from "./context/AuthContext";
 import { ThemeProvider } from "./components/theme-provider";
+import { Toaster } from "./components/ui/toast";
 
 // Navigation now lives inside AppLayout (sidebar on desktop, top-bar on
 // mobile), so we no longer mount a global Navbar at the App level.
@@ -43,11 +44,13 @@ const PublicOnly = ({ children }) => {
 function App() {
   return (
     <ThemeProvider defaultTheme="dark">
-      <AuthProvider>
-        <Router>
-          <AuthWrapper />
-        </Router>
-      </AuthProvider>
+      <Toaster>
+        <AuthProvider>
+          <Router>
+            <AuthWrapper />
+          </Router>
+        </AuthProvider>
+      </Toaster>
     </ThemeProvider>
   );
 }

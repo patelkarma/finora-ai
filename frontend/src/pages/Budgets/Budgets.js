@@ -16,6 +16,8 @@ import {
 import { Input } from '../../components/ui/input';
 import { Label } from '../../components/ui/label';
 import { MoneyValue } from '../../components/ui/money-value';
+import { ConfirmDialog } from '../../components/ui/confirm-dialog';
+import { useToast } from '../../components/ui/toast';
 import { cn } from '../../lib/utils';
 
 const PERIODS = ['monthly', 'weekly', 'yearly'];
@@ -32,6 +34,9 @@ const Budgets = () => {
   const [editing, setEditing] = useState(null);
   const [saving, setSaving] = useState(false);
   const [form, setForm] = useState({ category: '', amount: '', period: 'monthly' });
+  const [pendingDelete, setPendingDelete] = useState(null); // budget object or null
+  const [deleting, setDeleting] = useState(false);
+  const toast = useToast();
 
   const fetchBudgets = useCallback(async () => {
     if (!user) return;
@@ -67,14 +72,25 @@ const Budgets = () => {
     setModalOpen(true);
   };
 
-  const handleDelete = async (id, e) => {
+  // Two-stage delete: row click → setPendingDelete shows the dialog,
+  // dialog confirms → confirmDelete actually fires the API call.
+  const handleDelete = (b, e) => {
     e?.stopPropagation();
-    if (!window.confirm('Delete this budget?')) return;
+    setPendingDelete(b);
+  };
+
+  const confirmDelete = async () => {
+    if (!pendingDelete) return;
+    setDeleting(true);
     try {
-      await budgetService.deleteBudget(id);
+      await budgetService.deleteBudget(pendingDelete.id);
+      toast.success(`Deleted budget for ${pendingDelete.category}`);
+      setPendingDelete(null);
       fetchBudgets();
     } catch {
-      setError('Failed to delete budget.');
+      toast.error('Failed to delete budget.');
+    } finally {
+      setDeleting(false);
     }
   };
 
@@ -89,13 +105,17 @@ const Budgets = () => {
       const payload = { category: form.category.trim(), amount, period: form.period };
       if (editing) {
         await budgetService.updateBudget(editing.id, payload);
+        toast.success('Budget updated');
       } else {
         await budgetService.addBudget({ ...payload, userId: user.id });
+        toast.success('Budget created');
       }
       setModalOpen(false);
       fetchBudgets();
     } catch (err) {
       console.error('Save budget failed:', err);
+      // Validation-style errors stay inline in the modal; a toast on top
+      // would compete with the field error placement.
       setError(err?.response?.data?.message || 'Failed to save budget.');
     } finally {
       setSaving(false);
@@ -160,7 +180,7 @@ const Budgets = () => {
               budget={b}
               index={i}
               onEdit={() => handleEdit(b)}
-              onDelete={(e) => handleDelete(b.id, e)}
+              onDelete={(e) => handleDelete(b, e)}
             />
           ))}
         </div>
@@ -179,6 +199,17 @@ const Budgets = () => {
           />
         )}
       </AnimatePresence>
+
+      <ConfirmDialog
+        open={!!pendingDelete}
+        title={`Delete budget for ${pendingDelete?.category ?? ''}?`}
+        description="The budget itself is removed; your existing transactions in this category stay where they are."
+        confirmLabel="Delete"
+        variant="destructive"
+        loading={deleting}
+        onConfirm={confirmDelete}
+        onCancel={() => !deleting && setPendingDelete(null)}
+      />
     </AppLayout>
   );
 };
