@@ -67,8 +67,15 @@ public class GeminiEmbeddingProvider implements EmbeddingProvider {
         }
 
         String url = BASE_URL + model + ":embedContent?key=" + apiKey;
+        // gemini-embedding-001 returns 3072 dims by default; we declared
+        // vector(768) in the V4 migration, so we must request 768
+        // explicitly via outputDimensionality. taskType=RETRIEVAL_DOCUMENT
+        // hints to the model that this text will be retrieved against,
+        // improving downstream cosine-similarity quality.
         Map<String, Object> body = Map.of(
-                "content", Map.of("parts", List.of(Map.of("text", text)))
+                "content", Map.of("parts", List.of(Map.of("text", text))),
+                "taskType", "RETRIEVAL_DOCUMENT",
+                "outputDimensionality", DIMS
         );
 
         HttpHeaders headers = new HttpHeaders();
