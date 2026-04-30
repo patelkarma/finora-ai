@@ -5,7 +5,7 @@ import { AuthContext } from '../../context/AuthContext';
 import chatService from '../../services/chatService';
 import { AppLayout } from '../../components/app-layout';
 import { Button } from '../../components/ui/button';
-import { Card, CardContent } from '../../components/ui/card';
+import { Card } from '../../components/ui/card';
 import { cn } from '../../lib/utils';
 
 const SUGGESTIONS = [
@@ -33,38 +33,65 @@ const Chat = () => {
     }
   }, [messages, sending]);
 
-  const send = async (text) => {
+  const abortRef = useRef(null);
+
+  const send = (text) => {
     const message = (text ?? input).trim();
     if (!message || sending) return;
 
     setError(null);
     setInput('');
 
-    // Optimistic user message
-    const next = [...messages, { role: 'user', content: message }];
-    setMessages(next);
+    // Optimistic user turn + an empty assistant turn that we'll grow
+    // as tokens stream in. We also remember the assistant's index so
+    // the SSE callback can update only that bubble without rebuilding
+    // the whole array on every token (avoids O(n²) renders).
+    const userTurn = { role: 'user', content: message };
+    const assistantTurn = { role: 'assistant', content: '' };
+    let nextMessages;
+    setMessages((prev) => {
+      nextMessages = [...prev, userTurn, assistantTurn];
+      return nextMessages;
+    });
     setSending(true);
 
-    try {
-      const history = next.slice(-HISTORY_CAP - 1, -1); // exclude the new message
-      const res = await chatService.send({ message, history });
-      setMessages([...next, { role: 'assistant', content: res.reply }]);
-    } catch (err) {
-      console.error(err);
-      const status = err?.response?.status;
-      const msg =
-        status === 429
-          ? 'You are sending messages too quickly. Wait a moment and try again.'
-          : err?.response?.data?.message || 'Failed to get a reply. Try again.';
-      setError(msg);
-      // Roll back the optimistic user turn so retry isn't double-sent
-      setMessages(messages);
-    } finally {
-      setSending(false);
-      // Refocus input
-      inputRef.current?.focus();
-    }
+    const history = (nextMessages || messages).slice(-HISTORY_CAP - 2, -2);
+
+    abortRef.current = chatService.sendStream({
+      message,
+      history,
+      onToken: (chunk) => {
+        setMessages((prev) => {
+          const copy = prev.slice();
+          const last = copy[copy.length - 1];
+          if (last && last.role === 'assistant') {
+            copy[copy.length - 1] = { ...last, content: last.content + chunk };
+          }
+          return copy;
+        });
+      },
+      onDone: () => {
+        setSending(false);
+        inputRef.current?.focus();
+      },
+      onError: (err) => {
+        const status = err?.response?.status;
+        const friendly =
+          status === 429
+            ? 'You are sending messages too quickly. Wait a moment and try again.'
+            : err?.message || 'Failed to get a reply. Try again.';
+        setError(friendly);
+        // Roll back the optimistic user + (partial) assistant turns
+        // so a retry isn't double-sent and doesn't leave a half reply.
+        setMessages((prev) => prev.slice(0, -2));
+        setSending(false);
+        inputRef.current?.focus();
+      },
+    });
   };
+
+  // Cancel the in-flight stream if the user navigates away mid-reply.
+  useEffect(() => () => abortRef.current?.abort(), []);
 
   const reset = () => {
     setMessages([]);
@@ -103,12 +130,28 @@ const Chat = () => {
               <EmptyState onSuggestion={(s) => send(s)} userName={user?.name} />
             ) : (
               <AnimatePresence initial={false}>
-                {messages.map((m, i) => (
-                  <Bubble key={i} role={m.role} content={m.content} />
-                ))}
+                {messages.map((m, i) => {
+                  // Empty assistant bubble = stream open but no token yet,
+                  // render the thinking dots. As the first chunk arrives
+                  // this swaps to a real bubble in place.
+                  if (m.role === 'assistant' && !m.content) {
+                    return <ThinkingBubble key={i} />;
+                  }
+                  const isStreaming =
+                    sending &&
+                    m.role === 'assistant' &&
+                    i === messages.length - 1;
+                  return (
+                    <Bubble
+                      key={i}
+                      role={m.role}
+                      content={m.content}
+                      streaming={isStreaming}
+                    />
+                  );
+                })}
               </AnimatePresence>
             )}
-            {sending && <ThinkingBubble />}
           </div>
 
           {/* Input */}
@@ -163,7 +206,7 @@ const Chat = () => {
   );
 };
 
-function Bubble({ role, content }) {
+function Bubble({ role, content, streaming = false }) {
   const isUser = role === 'user';
   return (
     <motion.div
@@ -187,6 +230,14 @@ function Bubble({ role, content }) {
         )}
       >
         {content}
+        {streaming && (
+          <motion.span
+            aria-hidden
+            className="inline-block w-1.5 h-3.5 ml-0.5 -mb-0.5 rounded-sm bg-zinc-500 dark:bg-zinc-400"
+            animate={{ opacity: [1, 0.2, 1] }}
+            transition={{ duration: 0.9, repeat: Infinity }}
+          />
+        )}
       </div>
     </motion.div>
   );

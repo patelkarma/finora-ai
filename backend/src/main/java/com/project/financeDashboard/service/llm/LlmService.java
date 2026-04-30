@@ -8,6 +8,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
+import java.util.function.Consumer;
+
 /**
  * Public-facing LLM service. Wraps the active {@link LlmProvider} with
  * Resilience4j circuit breaker and retry, supplies a graceful fallback
@@ -50,6 +52,27 @@ public class LlmService {
     private String fallback(String prompt, Throwable ex) {
         log.warn("LLM fallback triggered for provider={} cause={}", provider.name(), ex.toString());
         return "Our AI assistant is temporarily unavailable. Your transactions and budgets are saved — please try generating an insight again in a few minutes.";
+    }
+
+    /**
+     * Streaming variant of {@link #generate(String)}. Tokens are pushed
+     * to {@code onChunk} as they arrive from the provider.
+     *
+     * <p>NOT cached — caching a stream would require buffering the full
+     * response defeating the streaming UX. The non-streaming path retains
+     * its 1h cache. NOT retried — replaying chunks after a partial failure
+     * would produce a corrupted reply. The circuit breaker still applies,
+     * with a fallback that emits a single human-readable error chunk.
+     */
+    @CircuitBreaker(name = "llm", fallbackMethod = "fallbackStream")
+    public void generateStream(String prompt, Consumer<String> onChunk) {
+        provider.generateStream(prompt, onChunk);
+    }
+
+    @SuppressWarnings("unused")
+    private void fallbackStream(String prompt, Consumer<String> onChunk, Throwable ex) {
+        log.warn("LLM stream fallback triggered for provider={} cause={}", provider.name(), ex.toString());
+        onChunk.accept("Our AI assistant is temporarily unavailable. Please try again in a few minutes.");
     }
 
     public String activeProviderName() {

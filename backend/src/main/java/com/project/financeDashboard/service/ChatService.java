@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.function.Consumer;
 
 /**
  * Builds the chat prompt and calls the LLM. The prompt format is:
@@ -41,6 +42,17 @@ public class ChatService {
     public String reply(User user, List<ChatMessage> history, String message) {
         String prompt = buildPrompt(user, history, message);
         return llmService.generate(prompt);
+    }
+
+    /**
+     * Streaming reply. Tokens are forwarded to {@code onChunk} as soon as
+     * the provider emits them — the controller wraps that consumer in an
+     * {@code SseEmitter.send(...)} call so the frontend renders tokens
+     * incrementally.
+     */
+    public void replyStream(User user, List<ChatMessage> history, String message, Consumer<String> onChunk) {
+        String prompt = buildPrompt(user, history, message);
+        llmService.generateStream(prompt, onChunk);
     }
 
     private String buildPrompt(User user, List<ChatMessage> history, String message) {

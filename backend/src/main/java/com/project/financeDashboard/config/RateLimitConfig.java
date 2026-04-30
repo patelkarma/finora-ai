@@ -59,9 +59,11 @@ public class RateLimitConfig implements WebMvcConfigurer {
 
         // Chat is more chatty by nature — 60 / hour / USER. Still
         // enough headroom for a normal conversation but caps a runaway
-        // client that holds Enter.
+        // client that holds Enter. Both the synchronous endpoint and
+        // the SSE streaming endpoint share the same bucket — sending
+        // is sending, regardless of how the response is delivered.
         registry.addInterceptor(new RateLimitInterceptor(
                         RateLimitRule.perUser("ai.chat", 60, Duration.ofHours(1))))
-                .addPathPatterns("/api/ai/chat");
+                .addPathPatterns("/api/ai/chat", "/api/ai/chat/stream");
     }
 }
