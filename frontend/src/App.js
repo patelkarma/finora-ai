@@ -5,6 +5,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-d
 import { AuthProvider, AuthContext } from "./context/AuthContext";
 import { ThemeProvider } from "./components/theme-provider";
 import { Toaster } from "./components/ui/toast";
+import ErrorBoundary from "./components/error-boundary";
 
 // Navigation now lives inside AppLayout (sidebar on desktop, top-bar on
 // mobile), so we no longer mount a global Navbar at the App level.
@@ -23,6 +24,7 @@ import ForgotPassword from "./pages/ForgotPassword/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword/ResetPassword";
 import DesignPreview from "./pages/DesignPreview/DesignPreview";
 import Privacy from "./pages/Privacy/Privacy";
+import NotFound from "./pages/NotFound/NotFound";
 
 
 import "./App.css";
@@ -42,15 +44,21 @@ const PublicOnly = ({ children }) => {
 };
 
 function App() {
+  // ErrorBoundary wraps the rest so any render-time throw inside Toaster /
+  // AuthProvider / a page component lands on the branded fallback rather
+  // than React's default white screen. Theme provider stays outside so
+  // the fallback inherits the user's dark/light preference.
   return (
     <ThemeProvider defaultTheme="dark">
-      <Toaster>
-        <AuthProvider>
-          <Router>
-            <AuthWrapper />
-          </Router>
-        </AuthProvider>
-      </Toaster>
+      <ErrorBoundary>
+        <Toaster>
+          <AuthProvider>
+            <Router>
+              <AuthWrapper />
+            </Router>
+          </AuthProvider>
+        </Toaster>
+      </ErrorBoundary>
     </ThemeProvider>
   );
 }
@@ -93,17 +101,26 @@ const AuthWrapper = () => {
             <Route path="/salary" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
             <Route path="/enter-salary" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
 
-            {/* Default */}
+            {/* Root route — known to redirect (signed-in to dashboard,
+                signed-out to login). Distinct from arbitrary unknown
+                URLs which now show a real 404. */}
             <Route
-              path="*"
+              path="/"
               element={
-                loading ? null :
-                (window.location.pathname.startsWith("/set-password") ||
-                 window.location.pathname.startsWith("/create-password"))
-                  ? <SetPassword />
-                  : <Navigate to={user ? "/dashboard" : "/login"} replace />
+                loading ? null : <Navigate to={user ? "/dashboard" : "/login"} replace />
               }
             />
+
+            {/* SetPassword's legacy paths used to land on the wildcard
+                with a path-prefix check; explicit routes are clearer
+                and let the wildcard mean "actually not found". */}
+            <Route path="/set-password/*" element={<SetPassword />} />
+            <Route path="/create-password/*" element={<SetPassword />} />
+
+            {/* Catch-all 404. Shows a branded NotFound page rather than
+                silently bouncing to /dashboard, which made typos
+                invisible. */}
+            <Route path="*" element={loading ? null : <NotFound />} />
 
           </Routes>
         </main>

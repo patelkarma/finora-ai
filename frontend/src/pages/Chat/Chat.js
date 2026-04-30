@@ -1,6 +1,8 @@
 import React, { useContext, useEffect, useRef, useState, useCallback } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Send, Sparkles, RefreshCw, Database } from 'lucide-react';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 import { AuthContext } from '../../context/AuthContext';
 import chatService from '../../services/chatService';
 import { AppLayout } from '../../components/app-layout';
@@ -283,13 +285,31 @@ function Bubble({ role, content, streaming = false }) {
       )}
       <div
         className={cn(
-          'rounded-2xl px-4 py-2.5 text-sm leading-relaxed max-w-[80%] sm:max-w-[70%] whitespace-pre-wrap',
+          'rounded-2xl px-4 py-2.5 text-sm leading-relaxed max-w-[80%] sm:max-w-[70%]',
+          // User turns are plain text — preserve newlines and stop there.
+          isUser && 'whitespace-pre-wrap',
           isUser
             ? 'bg-brand-gradient text-white rounded-br-sm shadow-md shadow-primary/20'
             : 'bg-zinc-100 dark:bg-zinc-900 text-zinc-900 dark:text-zinc-50 rounded-bl-sm'
         )}
       >
-        {content}
+        {/*
+         * Assistant turns may contain markdown — Gemini emits bullets,
+         * **bold**, occasional code spans for amounts/dates. Rendering
+         * as plaintext loses all of that. user turns stay verbatim;
+         * we don't want a stray underscore to italicize what the user
+         * actually typed.
+         */}
+        {isUser ? (
+          content
+        ) : (
+          <ReactMarkdown
+            remarkPlugins={[remarkGfm]}
+            components={MARKDOWN_COMPONENTS}
+          >
+            {content}
+          </ReactMarkdown>
+        )}
         {streaming && (
           <motion.span
             aria-hidden
@@ -302,6 +322,45 @@ function Bubble({ role, content, streaming = false }) {
     </motion.div>
   );
 }
+
+/**
+ * Inline element overrides — we keep the text-sm rhythm of the bubble
+ * and avoid introducing a "prose" plugin (which would also restyle the
+ * rest of the app). Block-level whitespace is tightened so a one-line
+ * answer doesn't get a giant top/bottom margin.
+ */
+const MARKDOWN_COMPONENTS = {
+  p: ({ node, children, ...props }) => <p className="m-0 mb-2 last:mb-0" {...props}>{children}</p>,
+  ul: ({ node, children, ...props }) => <ul className="m-0 mb-2 last:mb-0 list-disc pl-5 space-y-0.5" {...props}>{children}</ul>,
+  ol: ({ node, children, ...props }) => <ol className="m-0 mb-2 last:mb-0 list-decimal pl-5 space-y-0.5" {...props}>{children}</ol>,
+  li: ({ node, children, ...props }) => <li className="leading-relaxed" {...props}>{children}</li>,
+  strong: ({ node, children, ...props }) => <strong className="font-semibold" {...props}>{children}</strong>,
+  em: ({ node, children, ...props }) => <em className="italic" {...props}>{children}</em>,
+  code: ({ node, inline, children, ...props }) =>
+    inline ? (
+      <code className="px-1 py-0.5 rounded bg-zinc-200/70 dark:bg-zinc-800 text-[0.85em]" {...props}>
+        {children}
+      </code>
+    ) : (
+      <code className="block px-3 py-2 my-2 rounded-md bg-zinc-200/70 dark:bg-zinc-800 text-[0.85em] overflow-x-auto" {...props}>
+        {children}
+      </code>
+    ),
+  pre: ({ node, children, ...props }) => <pre className="m-0" {...props}>{children}</pre>,
+  a: ({ node, children, ...props }) => (
+    <a
+      className="text-primary underline underline-offset-2 hover:opacity-80"
+      target="_blank"
+      rel="noopener noreferrer"
+      {...props}
+    >
+      {children}
+    </a>
+  ),
+  h1: ({ node, children, ...props }) => <h3 className="text-base font-semibold mb-1.5" {...props}>{children}</h3>,
+  h2: ({ node, children, ...props }) => <h3 className="text-base font-semibold mb-1.5" {...props}>{children}</h3>,
+  h3: ({ node, children, ...props }) => <h3 className="text-sm font-semibold mb-1" {...props}>{children}</h3>,
+};
 
 function ThinkingBubble() {
   return (
