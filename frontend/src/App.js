@@ -21,6 +21,7 @@ import SetPassword from "./pages/SetPassword/SetPassword";
 import ForgotPassword from "./pages/ForgotPassword/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword/ResetPassword";
 import DesignPreview from "./pages/DesignPreview/DesignPreview";
+import Privacy from "./pages/Privacy/Privacy";
 
 
 import "./App.css";
@@ -62,6 +63,9 @@ const AuthWrapper = () => {
             {/* Design preview — public, no auth, used during Phase 2.7 to
                 iterate on the new design system before migrating pages. */}
             <Route path="/design-preview" element={<DesignPreview />} />
+
+            {/* Privacy + data-rights — public so users can read it before signing up. */}
+            <Route path="/privacy" element={<Privacy />} />
 
             {/* OAuth redirect page */}
             <Route path="/oauth-success" element={<OAuthSuccess />} />

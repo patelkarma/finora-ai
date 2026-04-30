@@ -1,9 +1,10 @@
 import React, { useState, useContext, useEffect } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { CheckCircle2, AlertCircle } from 'lucide-react';
+import { CheckCircle2, AlertCircle, Download, Trash2, Shield } from 'lucide-react';
 import { AuthContext } from '../../context/AuthContext';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import api from '../../services/api';
+import userDataService from '../../services/userDataService';
 import { AppLayout } from '../../components/app-layout';
 import { Button } from '../../components/ui/button';
 import {
@@ -18,7 +19,7 @@ import { Input } from '../../components/ui/input';
 import { Label } from '../../components/ui/label';
 
 const Profile = () => {
-  const { user, updateUser } = useContext(AuthContext);
+  const { user, updateUser, logout } = useContext(AuthContext);
   const navigate = useNavigate();
   const [form, setForm] = useState({
     name: user?.name || '',
@@ -29,6 +30,9 @@ const Profile = () => {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState(null);
   const [variant, setVariant] = useState('success');
+  const [exporting, setExporting] = useState(false);
+  const [deleteConfirm, setDeleteConfirm] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
     if (!user) navigate('/login');
@@ -44,6 +48,38 @@ const Profile = () => {
   }, [user]);
 
   const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value });
+
+  const handleExport = async () => {
+    if (exporting) return;
+    setExporting(true);
+    try {
+      await userDataService.exportMyData();
+    } catch (err) {
+      console.error('Export failed', err);
+      setVariant('error');
+      setMessage('Could not export your data. Please try again.');
+    } finally {
+      setExporting(false);
+    }
+  };
+
+  const handleDelete = async () => {
+    if (deleting) return;
+    setDeleting(true);
+    try {
+      await userDataService.deleteMyAccount();
+      // Wipe local auth and bounce to a public page. The next user
+      // request would 401 anyway since the row is gone.
+      logout();
+      navigate('/login');
+    } catch (err) {
+      console.error('Delete failed', err);
+      setVariant('error');
+      setMessage('Could not delete your account. Please try again or contact support.');
+      setDeleting(false);
+      setDeleteConfirm(false);
+    }
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -194,6 +230,86 @@ const Profile = () => {
           </Card>
         </motion.div>
       </div>
+
+      {/* Data & privacy — GDPR-style data-subject controls. */}
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.3, delay: 0.1 }}
+        className="mt-8"
+      >
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Shield className="h-5 w-5 text-primary" /> Data &amp; privacy
+            </CardTitle>
+            <CardDescription>
+              Take your data with you, or remove it permanently. See the{' '}
+              <Link to="/privacy" className="text-primary hover:underline">
+                privacy page
+              </Link>{' '}
+              for details on what we store and where.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {/* Export */}
+            <div className="flex items-center justify-between gap-4 flex-wrap">
+              <div className="min-w-0 flex-1">
+                <p className="text-sm font-medium text-zinc-900 dark:text-zinc-50">
+                  Export my data
+                </p>
+                <p className="text-xs text-zinc-500 dark:text-zinc-400">
+                  Downloads a JSON file with your profile, transactions, budgets,
+                  insights, and login history.
+                </p>
+              </div>
+              <Button variant="outline" onClick={handleExport} disabled={exporting}>
+                <Download className="h-4 w-4" />
+                {exporting ? 'Preparing…' : 'Download'}
+              </Button>
+            </div>
+
+            <div className="border-t border-zinc-200 dark:border-zinc-800" />
+
+            {/* Delete */}
+            <div className="flex items-center justify-between gap-4 flex-wrap">
+              <div className="min-w-0 flex-1">
+                <p className="text-sm font-medium text-destructive">
+                  Delete my account
+                </p>
+                <p className="text-xs text-zinc-500 dark:text-zinc-400">
+                  Permanently wipes your account and every row we hold for you.
+                  There is no undo.
+                </p>
+              </div>
+              {!deleteConfirm ? (
+                <Button
+                  variant="outline"
+                  className="border-destructive/30 text-destructive hover:bg-destructive/10"
+                  onClick={() => setDeleteConfirm(true)}
+                >
+                  <Trash2 className="h-4 w-4" />
+                  Delete account
+                </Button>
+              ) : (
+                <div className="flex gap-2">
+                  <Button variant="outline" onClick={() => setDeleteConfirm(false)} disabled={deleting}>
+                    Cancel
+                  </Button>
+                  <Button
+                    variant="outline"
+                    className="border-destructive bg-destructive/10 text-destructive hover:bg-destructive/20"
+                    onClick={handleDelete}
+                    disabled={deleting}
+                  >
+                    {deleting ? 'Deleting…' : 'Yes, delete forever'}
+                  </Button>
+                </div>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+      </motion.div>
     </AppLayout>
   );
 };
