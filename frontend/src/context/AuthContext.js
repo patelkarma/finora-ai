@@ -37,8 +37,13 @@ export const AuthProvider = ({ children }) => {
     try {
       localStorage.setItem("token", token);
 
+      // skipAuthRedirect: a 401 here just means the stored token is
+      // stale — let our own catch block clean up rather than letting
+      // the global interceptor do a hard "/login?session=expired"
+      // bounce on cold start.
       const res = await api.get("/auth/me", {
         headers: { Authorization: `Bearer ${token}` },
+        skipAuthRedirect: true,
       });
 
       const userData = res.data;

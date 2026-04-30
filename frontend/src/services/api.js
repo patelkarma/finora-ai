@@ -21,17 +21,22 @@ api.interceptors.request.use((config) => {
 });
 
 // On 401 from any /api/** route, the token is missing or expired —
-// purge local auth state and bounce to /login. This used to silently
-// follow the 302 → /login HTML redirect, leaving the UI in a stuck
-// "trying to save" state. With the backend now returning 401 JSON for
-// /api/** (SecurityConfig.exceptionHandling), this branch fires and
-// the user gets a clean session reset.
+// purge local auth state and bounce to /login. Two guards prevent
+// false-positive bounces:
+//   1) skipAuthRedirect — set on the AuthContext cold-start /auth/me
+//      restoration call. That call is exploratory (do we have a valid
+//      session?) and 401 there is normal; AuthContext clears state
+//      itself and the user lands on /login without an alarmist banner.
+//   2) wasAuthenticated — we only treat the 401 as a session-expiry
+//      event if there's a `user` in localStorage. Without that, a 401
+//      means we never had auth in the first place and there's nothing
+//      to "expire."
 api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error?.response?.status === 401) {
+      const skip = error?.config?.skipAuthRedirect;
       const path = window.location.pathname;
-      // Don't loop on already-public routes
       const isPublic =
         path.startsWith("/login") ||
         path.startsWith("/signup") ||
@@ -41,10 +46,11 @@ api.interceptors.response.use(
         path.startsWith("/set-password") ||
         path.startsWith("/create-password");
 
-      if (!isPublic) {
+      const wasAuthenticated = !!localStorage.getItem("user");
+
+      if (!skip && !isPublic && wasAuthenticated) {
         localStorage.removeItem("token");
         localStorage.removeItem("user");
-        // Use replace so back-button doesn't return to the broken page
         window.location.replace("/login?session=expired");
       }
     }
