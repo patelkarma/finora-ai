@@ -7,6 +7,7 @@ import com.project.financeDashboard.model.User;
 import com.project.financeDashboard.repository.TransactionRepository;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -69,8 +70,19 @@ public class TransactionService {
      * when there's no active tx. Without this, embeddings would never
      * be written.
      */
+    /**
+     * Evict BOTH the transactions cache and the insights cache on any
+     * write. Phase 3.3 added subscription / anomaly / forecast results
+     * stored under CACHE_INSIGHTS — those are computed FROM transactions,
+     * so a transaction write must invalidate them too. Without this,
+     * a fresh seed wouldn't dislodge an empty pre-seed cache entry and
+     * the new dashboard cards would render blank for up to 5 minutes.
+     */
     @Transactional
-    @CacheEvict(value = RedisCacheConfig.CACHE_TRANSACTIONS, allEntries = true)
+    @Caching(evict = {
+            @CacheEvict(value = RedisCacheConfig.CACHE_TRANSACTIONS, allEntries = true),
+            @CacheEvict(value = RedisCacheConfig.CACHE_INSIGHTS, allEntries = true)
+    })
     public Transaction saveTransaction(@NonNull Transaction transaction) {
         Transaction saved = transactionRepository.save(transaction);
         events.publishEvent(new TransactionSavedEvent(saved));
@@ -81,7 +93,10 @@ public class TransactionService {
         return transactionRepository.findById(id);
     }
 
-    @CacheEvict(value = RedisCacheConfig.CACHE_TRANSACTIONS, allEntries = true)
+    @Caching(evict = {
+            @CacheEvict(value = RedisCacheConfig.CACHE_TRANSACTIONS, allEntries = true),
+            @CacheEvict(value = RedisCacheConfig.CACHE_INSIGHTS, allEntries = true)
+    })
     public void deleteTransaction(@NonNull Long id) {
         transactionRepository.deleteById(id);
     }
