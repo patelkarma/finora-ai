@@ -81,20 +81,22 @@ export const AuthProvider = ({ children }) => {
 
   // ✅ Restore session on reload
   useEffect(() => {
-    const token = localStorage.getItem("token");
-    if (!token) {
+    // On OAuth callback pages, the page itself owns auth — it reads
+    // the token from the URL and calls loginWithToken. Do NOT clear
+    // or read localStorage here: in React, children effects fire
+    // before parent effects, so OAuthSuccess.useEffect will already
+    // have written localStorage.token by the time this runs. Clearing
+    // it here was wiping the freshly-set token, which then made
+    // Dashboard's first /transactions call go out without an
+    // Authorization header — backend 401 → user bounced to login.
+    const path = window.location.pathname;
+    if (path.startsWith('/oauth-success') || path.startsWith('/set-password') || path.startsWith('/create-password')) {
       setLoading(false);
       return;
     }
 
-    // On OAuth callback pages, clear any stale token+user and let the
-    // page handle its own auth. We clear `user` too so the global
-    // interceptor's wasAuthenticated guard treats subsequent 401s as
-    // "not yet authenticated" rather than "session expired."
-    const path = window.location.pathname;
-    if (path.startsWith('/oauth-success') || path.startsWith('/set-password') || path.startsWith('/create-password')) {
-      localStorage.removeItem("token");
-      localStorage.removeItem("user");
+    const token = localStorage.getItem("token");
+    if (!token) {
       setLoading(false);
       return;
     }
