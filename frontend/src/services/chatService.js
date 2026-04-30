@@ -15,6 +15,22 @@ const chatService = {
     return response.data; // { reply, provider }
   },
 
+  /** Returns { enabled, total, indexed, pending } — see backend RagAdminController. */
+  ragStatus: async () => {
+    const res = await api.get('/ai/rag/status');
+    return res.data;
+  },
+
+  /**
+   * Kick off a backfill of unindexed transactions for the current user.
+   * Returns { queued, alreadyIndexed, total } immediately; actual work
+   * runs async on the backend.
+   */
+  ragBackfill: async () => {
+    const res = await api.post('/ai/rag/backfill', {});
+    return res.data;
+  },
+
   /**
    * SSE streaming variant. Tokens arrive incrementally via `onToken`.
    * `onDone` fires after the server emits `event: done`. `onError` is

@@ -65,5 +65,13 @@ public class RateLimitConfig implements WebMvcConfigurer {
         registry.addInterceptor(new RateLimitInterceptor(
                         RateLimitRule.perUser("ai.chat", 60, Duration.ofHours(1))))
                 .addPathPatterns("/api/ai/chat", "/api/ai/chat/stream");
+
+        // RAG backfill — heavy operation that can spend hundreds of
+        // embed calls per invocation. 5 / hour / USER is plenty for the
+        // legitimate "I added new transactions, re-index me" case while
+        // capping any tight retry loop.
+        registry.addInterceptor(new RateLimitInterceptor(
+                        RateLimitRule.perUser("ai.rag.backfill", 5, Duration.ofHours(1))))
+                .addPathPatterns("/api/ai/rag/backfill");
     }
 }

@@ -1,6 +1,6 @@
-import React, { useContext, useEffect, useRef, useState } from 'react';
+import React, { useContext, useEffect, useRef, useState, useCallback } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { Send, Sparkles, RefreshCw } from 'lucide-react';
+import { Send, Sparkles, RefreshCw, Database } from 'lucide-react';
 import { AuthContext } from '../../context/AuthContext';
 import chatService from '../../services/chatService';
 import { AppLayout } from '../../components/app-layout';
@@ -93,6 +93,54 @@ const Chat = () => {
   // Cancel the in-flight stream if the user navigates away mid-reply.
   useEffect(() => () => abortRef.current?.abort(), []);
 
+  // ───────── RAG indexing status ─────────
+  // Pulled live so the header badge stays in sync as the backend
+  // works through the embedding queue. Polls every 5s while a
+  // backfill is pending; idles once everything is indexed.
+  const [ragStatus, setRagStatus] = useState(null);
+  const [ragBusy, setRagBusy] = useState(false);
+
+  const refreshRagStatus = useCallback(async () => {
+    try {
+      const s = await chatService.ragStatus();
+      setRagStatus(s);
+    } catch {
+      // Backend unreachable / endpoint not deployed yet — hide the badge.
+      setRagStatus(null);
+    }
+  }, []);
+
+  useEffect(() => { refreshRagStatus(); }, [refreshRagStatus]);
+
+  // Poll while there's pending work or while a backfill is in flight.
+  useEffect(() => {
+    if (!ragStatus?.enabled) return;
+    const pending = ragStatus.pending || 0;
+    if (pending === 0 && !ragBusy) return;
+    const t = setInterval(refreshRagStatus, 5000);
+    return () => clearInterval(t);
+  }, [ragStatus, ragBusy, refreshRagStatus]);
+
+  const triggerBackfill = async () => {
+    if (ragBusy) return;
+    setRagBusy(true);
+    try {
+      await chatService.ragBackfill();
+      await refreshRagStatus();
+    } catch (err) {
+      const status = err?.response?.status;
+      setError(
+        status === 429
+          ? 'You can only re-index 5 times per hour. Try again later.'
+          : 'Failed to start re-indexing. Try again.'
+      );
+    } finally {
+      // Leave busy=true for ~2s so the spinner is visible even if the
+      // server queues the work instantly. Then the polling loop takes over.
+      setTimeout(() => setRagBusy(false), 2000);
+    }
+  };
+
   const reset = () => {
     setMessages([]);
     setError(null);
@@ -111,11 +159,16 @@ const Chat = () => {
             Ground your questions in your real transactions and budgets.
           </p>
         </div>
-        {messages.length > 0 && (
-          <Button variant="outline" size="sm" onClick={reset}>
-            <RefreshCw className="h-4 w-4" /> New chat
-          </Button>
-        )}
+        <div className="flex items-center gap-2">
+          {ragStatus?.enabled && ragStatus.total > 0 && (
+            <RagBadge status={ragStatus} busy={ragBusy} onBackfill={triggerBackfill} />
+          )}
+          {messages.length > 0 && (
+            <Button variant="outline" size="sm" onClick={reset}>
+              <RefreshCw className="h-4 w-4" /> New chat
+            </Button>
+          )}
+        </div>
       </header>
 
       <div className="flex flex-col min-h-[calc(100vh-12rem)]">
@@ -264,6 +317,54 @@ function ThinkingBubble() {
         ))}
       </div>
     </motion.div>
+  );
+}
+
+function RagBadge({ status, busy, onBackfill }) {
+  const { total, indexed, pending } = status;
+  const pct = total > 0 ? Math.round((indexed / total) * 100) : 0;
+  const isComplete = pending === 0;
+  const isBusy = busy || pending > 0;
+
+  return (
+    <div
+      title={`${indexed} of ${total} transactions embedded for semantic search`}
+      className={cn(
+        'flex items-center gap-2 rounded-full border px-3 py-1.5 text-xs',
+        'border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900/60'
+      )}
+    >
+      <Database
+        className={cn(
+          'h-3.5 w-3.5',
+          isComplete ? 'text-[hsl(var(--gain))]' : 'text-primary'
+        )}
+      />
+      <span className="text-zinc-700 dark:text-zinc-300 font-medium tabular-nums">
+        {indexed}/{total}
+        <span className="text-zinc-500 dark:text-zinc-500 ml-1">indexed</span>
+      </span>
+      {isBusy && (
+        <motion.span
+          aria-hidden
+          className="inline-block h-1.5 w-1.5 rounded-full bg-primary"
+          animate={{ opacity: [1, 0.3, 1] }}
+          transition={{ duration: 1.1, repeat: Infinity }}
+        />
+      )}
+      {!isComplete && !busy && (
+        <button
+          type="button"
+          onClick={onBackfill}
+          className="text-primary hover:underline font-medium"
+        >
+          Re-index ({pending})
+        </button>
+      )}
+      {isComplete && (
+        <span className="text-zinc-500 dark:text-zinc-500">{pct}%</span>
+      )}
+    </div>
   );
 }
 

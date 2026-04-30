@@ -26,6 +26,7 @@ import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 public class AsyncConfig {
 
     public static final String EMBEDDING_EXECUTOR = "embeddingTaskExecutor";
+    public static final String BACKFILL_EXECUTOR = "ragBackfillTaskExecutor";
 
     @Bean(name = EMBEDDING_EXECUTOR)
     public TaskExecutor embeddingTaskExecutor() {
@@ -37,6 +38,29 @@ public class AsyncConfig {
         // If queue fills (sustained burst > 50 unembedded txs), the calling
         // thread runs the task. Slows down writes but never drops embeds.
         exec.setRejectedExecutionHandler(new java.util.concurrent.ThreadPoolExecutor.CallerRunsPolicy());
+        exec.setWaitForTasksToCompleteOnShutdown(true);
+        exec.setAwaitTerminationSeconds(10);
+        exec.initialize();
+        return exec;
+    }
+
+    /**
+     * Dedicated single-thread executor for RAG backfill. Kept separate
+     * from the live-save embedding pool on purpose — a backfill of 500
+     * transactions must not starve a user's "save → embed" pipeline.
+     * Sequential by design: the backfill task paces itself with a small
+     * sleep between Gemini calls to stay under quota.
+     */
+    @Bean(name = BACKFILL_EXECUTOR)
+    public TaskExecutor ragBackfillTaskExecutor() {
+        ThreadPoolTaskExecutor exec = new ThreadPoolTaskExecutor();
+        exec.setCorePoolSize(1);
+        exec.setMaxPoolSize(1);
+        // Bigger queue — many users could each enqueue a backfill while
+        // the worker is busy with an earlier one.
+        exec.setQueueCapacity(20);
+        exec.setThreadNamePrefix("rag-backfill-");
+        exec.setRejectedExecutionHandler(new java.util.concurrent.ThreadPoolExecutor.AbortPolicy());
         exec.setWaitForTasksToCompleteOnShutdown(true);
         exec.setAwaitTerminationSeconds(10);
         exec.initialize();
