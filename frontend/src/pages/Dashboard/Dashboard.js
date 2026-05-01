@@ -1180,8 +1180,14 @@ function PeriodSwitcher({ value, onChange }) {
     { v: '1y', label: '1Y' },
     { v: 'all', label: 'All' },
   ];
+  // The switcher sits on the bare page background, so it needs its own
+  // outline to stay visible — `bg-zinc-100 dark:bg-zinc-900` blended
+  // into the dark page bg before, and the selected pill barely lifted
+  // off the track. Use design-token surfaces (muted track, card pill)
+  // plus an explicit border so the control reads as a control in both
+  // themes.
   return (
-    <div className="flex gap-1 p-1 rounded-md bg-zinc-100 dark:bg-zinc-900">
+    <div className="inline-flex gap-1 p-1 rounded-md bg-muted/60 border border-border">
       {options.map(({ v, label }) => (
         <button
           key={v}
@@ -1190,15 +1196,15 @@ function PeriodSwitcher({ value, onChange }) {
           className={cn(
             'px-3 py-1.5 rounded text-xs font-medium transition-colors relative',
             value === v
-              ? 'text-zinc-900 dark:text-zinc-50'
-              : 'text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-50'
+              ? 'text-zinc-900 dark:text-white'
+              : 'text-zinc-500 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-white'
           )}
           aria-pressed={value === v}
         >
           {value === v && (
             <motion.span
               layoutId="dashboard-period-pill"
-              className="absolute inset-0 -z-10 rounded bg-white dark:bg-zinc-800 shadow-sm"
+              className="absolute inset-0 -z-10 rounded bg-white dark:bg-zinc-700 shadow-sm dark:shadow-black/40"
               transition={{ type: 'spring', stiffness: 400, damping: 32 }}
             />
           )}

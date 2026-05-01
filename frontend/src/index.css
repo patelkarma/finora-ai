@@ -26,10 +26,15 @@
     --background: 240 10% 4%;            /* near-black */
     --foreground: 240 5% 96%;            /* near-white */
 
-    --card: 240 8% 7%;
+    /* Card/popover sit ~6 percentage points above the page background.
+       At 4% bg vs 7% card the two were almost indistinguishable in dark
+       mode, which made the dashboard look like floating text rather
+       than cards — bumping to 10% gives clear visual layering without
+       drifting away from the "premium dark" feel. */
+    --card: 240 7% 10%;
     --card-foreground: 240 5% 96%;
 
-    --popover: 240 8% 7%;
+    --popover: 240 7% 10%;
     --popover-foreground: 240 5% 96%;
 
     --primary: 265 80% 68%;              /* softer violet, less saturated */
@@ -47,8 +52,11 @@
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 240 6% 16%;
-    --input: 240 6% 16%;
+    /* Borders need to be a noticeable step above card so card edges
+       stay legible against the lighter card fill. Was 16%, bumped to
+       20% for cleaner card outlines in dark mode. */
+    --border: 240 6% 20%;
+    --input: 240 6% 20%;
     --ring: 265 80% 68%;
 
     --gain: 142 65% 50%;                 /* slightly brighter income green */
