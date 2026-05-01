@@ -466,11 +466,3 @@ loadtests/         k6 scripts + results.md (documented perf numbers)
 **Karma Patel** · 3rd year, Cloud & Application Development · [github.com/patelkarma](https://github.com/patelkarma)
 
 If you read this far and you're hiring junior backend / full-stack engineers, [say hi](https://github.com/patelkarma).
-
----
-
-<div align="center">
-
-⭐ &nbsp; If this taught you something or saved you a debugging hour, drop a star.
-
-</div>
