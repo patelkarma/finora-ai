@@ -161,7 +161,7 @@ export default function Sidebar() {
                   animate={{ opacity: 1, y: 0, scale: 1 }}
                   exit={{ opacity: 0, y: 8, scale: 0.96 }}
                   transition={{ duration: 0.15 }}
-                  className="absolute bottom-full left-0 right-0 mb-2 rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 shadow-xl py-1"
+                  className="absolute bottom-full left-0 right-0 mb-2 rounded-lg border border-border bg-popover shadow-xl py-1"
                 >
                   <button
                     onClick={() => { setProfileOpen(false); navigate('/profile'); }}
@@ -211,7 +211,7 @@ export default function Sidebar() {
               animate={{ x: 0 }}
               exit={{ x: '-100%' }}
               transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-              className="lg:hidden fixed top-0 left-0 z-50 h-full w-72 bg-white dark:bg-zinc-950 border-r border-zinc-200 dark:border-zinc-800 flex flex-col"
+              className="lg:hidden fixed top-0 left-0 z-50 h-full w-72 bg-card border-r border-border flex flex-col"
             >
               <div className="flex items-center justify-between px-5 h-14 border-b border-zinc-200 dark:border-zinc-800">
                 <div className="flex items-center gap-2">

@@ -123,7 +123,7 @@ export default function Navbar() {
                   animate={{ opacity: 1, scale: 1, y: 0 }}
                   exit={{ opacity: 0, scale: 0.96, y: -4 }}
                   transition={{ duration: 0.15 }}
-                  className="absolute right-0 mt-2 w-56 rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 shadow-xl py-1"
+                  className="absolute right-0 mt-2 w-56 rounded-lg border border-border bg-popover shadow-xl py-1"
                 >
                   <div className="px-3 py-2 border-b border-zinc-200 dark:border-zinc-800">
                     <p className="text-sm font-medium text-zinc-900 dark:text-zinc-50 truncate">{user?.name}</p>
