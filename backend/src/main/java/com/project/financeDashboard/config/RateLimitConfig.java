@@ -73,5 +73,13 @@ public class RateLimitConfig implements WebMvcConfigurer {
         registry.addInterceptor(new RateLimitInterceptor(
                         RateLimitRule.perUser("ai.rag.backfill", 5, Duration.ofHours(1))))
                 .addPathPatterns("/api/ai/rag/backfill");
+
+        // CSV import — each call can fan out to up to 1000 transaction
+        // rows + 1000 async embed jobs. 10 / hour / USER covers the
+        // "redo the import with a fixed file" loop without letting a
+        // bad script pour through the Gemini quota.
+        registry.addInterceptor(new RateLimitInterceptor(
+                        RateLimitRule.perUser("transactions.import", 10, Duration.ofHours(1))))
+                .addPathPatterns("/api/transactions/user/*/import");
     }
 }

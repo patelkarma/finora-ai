@@ -9,6 +9,9 @@ import {
   ArrowDownRight,
   Pencil,
   Trash2,
+  Upload,
+  CheckSquare,
+  Square,
 } from 'lucide-react';
 import transactionService from '../../services/transactionService';
 import { AppLayout } from '../../components/app-layout';
@@ -25,6 +28,7 @@ import { Label } from '../../components/ui/label';
 import { MoneyValue } from '../../components/ui/money-value';
 import { ConfirmDialog } from '../../components/ui/confirm-dialog';
 import { useToast } from '../../components/ui/toast';
+import { CsvImportModal } from '../../components/csv-import-modal';
 import { cn } from '../../lib/utils';
 
 const Transactions = () => {
@@ -42,6 +46,10 @@ const Transactions = () => {
   const [saving, setSaving] = useState(false);
   const [pendingDelete, setPendingDelete] = useState(null);
   const [deleting, setDeleting] = useState(false);
+  const [importOpen, setImportOpen] = useState(false);
+  const [selected, setSelected] = useState(() => new Set());
+  const [bulkDeleting, setBulkDeleting] = useState(false);
+  const [bulkConfirmOpen, setBulkConfirmOpen] = useState(false);
   const toast = useToast();
   const [form, setForm] = useState({
     description: '',
@@ -142,6 +150,53 @@ const Transactions = () => {
     }
   };
 
+  const toggleSelect = useCallback((id, e) => {
+    e?.stopPropagation();
+    setSelected((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }, []);
+
+  const allFilteredSelected = filtered.length > 0 && filtered.every((t) => selected.has(t.id));
+  const someFilteredSelected = !allFilteredSelected && filtered.some((t) => selected.has(t.id));
+
+  const toggleSelectAll = useCallback(() => {
+    setSelected((prev) => {
+      const filteredIds = filtered.map((t) => t.id);
+      const everyOneSelected = filteredIds.length > 0 && filteredIds.every((id) => prev.has(id));
+      if (everyOneSelected) {
+        const next = new Set(prev);
+        filteredIds.forEach((id) => next.delete(id));
+        return next;
+      }
+      const next = new Set(prev);
+      filteredIds.forEach((id) => next.add(id));
+      return next;
+    });
+  }, [filtered]);
+
+  const clearSelection = useCallback(() => setSelected(new Set()), []);
+
+  const confirmBulkDelete = async () => {
+    if (selected.size === 0) return;
+    setBulkDeleting(true);
+    try {
+      const ids = Array.from(selected);
+      const result = await transactionService.bulkDelete(user.id, ids);
+      toast.success(`${result.deleted} ${result.deleted === 1 ? 'transaction' : 'transactions'} deleted`);
+      setSelected(new Set());
+      setBulkConfirmOpen(false);
+      fetchTransactions();
+    } catch {
+      toast.error('Bulk delete failed.');
+    } finally {
+      setBulkDeleting(false);
+    }
+  };
+
   const handleSave = async () => {
     setError(null);
     const amount = parseFloat(form.amount);
@@ -203,9 +258,14 @@ const Transactions = () => {
             {search && ` · matching "${search}"`}
           </p>
         </div>
-        <Button variant="gradient" size="lg" onClick={handleAdd} className="shadow-lg shadow-primary/30">
-          <Plus className="h-4 w-4" /> Add transaction
-        </Button>
+        <div className="flex items-center gap-2 flex-wrap">
+          <Button variant="outline" size="lg" onClick={() => setImportOpen(true)}>
+            <Upload className="h-4 w-4" /> Import CSV
+          </Button>
+          <Button variant="gradient" size="lg" onClick={handleAdd} className="shadow-lg shadow-primary/30">
+            <Plus className="h-4 w-4" /> Add transaction
+          </Button>
+        </div>
       </header>
 
       {error && (
@@ -213,6 +273,40 @@ const Transactions = () => {
           {error}
         </div>
       )}
+
+      {/* Bulk action bar — appears above the filter bar when any rows
+          are selected. Lives in normal flow (not fixed) so the page
+          shifts down rather than overlapping content. */}
+      <AnimatePresence>
+        {selected.size > 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: -6 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -6 }}
+            transition={{ duration: 0.18 }}
+            className="mb-4 flex items-center justify-between gap-3 px-4 py-3 rounded-md border border-primary/30 bg-primary/5"
+          >
+            <div className="text-sm text-zinc-700 dark:text-zinc-200">
+              <span className="font-medium">{selected.size}</span>{' '}
+              {selected.size === 1 ? 'transaction' : 'transactions'} selected
+            </div>
+            <div className="flex items-center gap-2">
+              <Button type="button" size="sm" variant="outline" onClick={clearSelection}>
+                Clear
+              </Button>
+              <Button
+                type="button"
+                size="sm"
+                variant="outline"
+                onClick={() => setBulkConfirmOpen(true)}
+                className="text-destructive border-destructive/40 hover:bg-destructive/10 hover:text-destructive"
+              >
+                <Trash2 className="h-3.5 w-3.5" /> Delete selected
+              </Button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Filter bar */}
       <Card className="mb-6">
@@ -274,6 +368,26 @@ const Transactions = () => {
         </Card>
       ) : (
         <div className="space-y-6">
+          {/* Select-all sits above the first group so it scopes to the
+              currently filtered list rather than living inside one
+              date section. */}
+          {filtered.length > 0 && (
+            <button
+              type="button"
+              onClick={toggleSelectAll}
+              className="flex items-center gap-2 text-xs text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-50 px-1"
+            >
+              {allFilteredSelected ? (
+                <CheckSquare className="h-3.5 w-3.5 text-primary" />
+              ) : someFilteredSelected ? (
+                <CheckSquare className="h-3.5 w-3.5 text-primary opacity-60" />
+              ) : (
+                <Square className="h-3.5 w-3.5" />
+              )}
+              {allFilteredSelected ? 'Deselect all' : 'Select all'}
+              <span className="text-zinc-400">({filtered.length})</span>
+            </button>
+          )}
           {grouped.map((g) => (
             <section key={g.label}>
               <h2 className="text-xs uppercase tracking-wider text-zinc-500 dark:text-zinc-500 mb-2 px-1">
@@ -287,9 +401,30 @@ const Transactions = () => {
                       initial={{ opacity: 0, y: 4 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: i * 0.02, duration: 0.2 }}
-                      className="group flex items-center gap-3 px-5 py-3 hover:bg-zinc-50 dark:hover:bg-zinc-900/40 cursor-pointer transition-colors"
+                      className={cn(
+                        'group flex items-center gap-3 px-5 py-3 hover:bg-zinc-50 dark:hover:bg-zinc-900/40 cursor-pointer transition-colors',
+                        selected.has(t.id) && 'bg-primary/5 hover:bg-primary/10'
+                      )}
                       onClick={() => handleEdit(t)}
                     >
+                      <button
+                        type="button"
+                        onClick={(e) => toggleSelect(t.id, e)}
+                        className={cn(
+                          'h-5 w-5 rounded grid place-items-center flex-shrink-0 transition-colors',
+                          selected.has(t.id)
+                            ? 'text-primary'
+                            : 'text-zinc-400 dark:text-zinc-600 opacity-0 group-hover:opacity-100',
+                          selected.size > 0 && 'opacity-100'
+                        )}
+                        aria-label={selected.has(t.id) ? 'Deselect' : 'Select'}
+                      >
+                        {selected.has(t.id) ? (
+                          <CheckSquare className="h-4 w-4" />
+                        ) : (
+                          <Square className="h-4 w-4" />
+                        )}
+                      </button>
                       <div
                         className={cn(
                           'h-9 w-9 rounded-full grid place-items-center flex-shrink-0',
@@ -370,6 +505,28 @@ const Transactions = () => {
         onConfirm={confirmDelete}
         onCancel={() => !deleting && setPendingDelete(null)}
       />
+
+      <ConfirmDialog
+        open={bulkConfirmOpen}
+        title={`Delete ${selected.size} ${selected.size === 1 ? 'transaction' : 'transactions'}?`}
+        description="The selected entries will be removed permanently. This also re-runs your AI insights, so dashboard cards will refresh in a few seconds."
+        confirmLabel={`Delete ${selected.size}`}
+        variant="destructive"
+        loading={bulkDeleting}
+        onConfirm={confirmBulkDelete}
+        onCancel={() => !bulkDeleting && setBulkConfirmOpen(false)}
+      />
+
+      <AnimatePresence>
+        {importOpen && (
+          <CsvImportModal
+            open={importOpen}
+            userId={user?.id}
+            onClose={() => setImportOpen(false)}
+            onImported={fetchTransactions}
+          />
+        )}
+      </AnimatePresence>
     </AppLayout>
   );
 };

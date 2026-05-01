@@ -71,6 +71,12 @@ const Dashboard = () => {
   // sticks for the lifetime of the component.
   const incomeOnceSeen = useRef(false);
 
+  // Stats window — controls the date range for the hero stat cards and
+  // top-categories breakdown. Forecast / subscriptions / anomalies have
+  // their own backend windows and ignore this. Default 30d matches the
+  // forecast horizon so the two halves of the page tell one story.
+  const [period, setPeriod] = useState('30d');
+
   const [modalOpen, setModalOpen] = useState(false);
   const [editing, setEditing] = useState(null);
   const [form, setForm] = useState({
@@ -78,6 +84,20 @@ const Dashboard = () => {
     amount: '',
     category: '',
     transactionDate: new Date().toISOString().split('T')[0],
+  });
+
+  // Quick-add modal lives on the dashboard so a user can record a
+  // transaction without leaving the page they came to scan. Same shape
+  // as the Transactions page modal but state-isolated.
+  const [quickAddOpen, setQuickAddOpen] = useState(false);
+  const [quickAddSaving, setQuickAddSaving] = useState(false);
+  const [quickAddError, setQuickAddError] = useState(null);
+  const [quickForm, setQuickForm] = useState({
+    description: '',
+    amount: '',
+    category: '',
+    transactionDate: new Date().toISOString().split('T')[0],
+    type: 'expense',
   });
 
   const refresh = useCallback(async () => {
@@ -133,18 +153,27 @@ const Dashboard = () => {
     if (user) refresh();
   }, [user, loading, navigate, refresh]);
 
-  // ───────── Stats (this month) ─────────
+  // ───────── Stats (rolling window per `period`) ─────────
   const { totalIncome, totalExpense, net, byCategory } = useMemo(() => {
-    const thisMonth = new Date().getMonth();
-    const thisYear = new Date().getFullYear();
+    // Days lookback: 30d → 30, 90d → 90, 1y → 365, all → +Infinity (no
+    // filter). Anything else falls back to 30 to fail safely.
+    const days = period === '90d' ? 90
+      : period === '1y' ? 365
+        : period === 'all' ? Number.POSITIVE_INFINITY
+          : 30;
+    const cutoff = Number.isFinite(days)
+      ? new Date(Date.now() - days * 24 * 60 * 60 * 1000)
+      : null;
 
     let inc = 0;
     let exp = 0;
     const cats = new Map();
 
     for (const t of transactions) {
-      const d = new Date(t.transactionDate);
-      if (d.getMonth() !== thisMonth || d.getFullYear() !== thisYear) continue;
+      if (cutoff) {
+        const d = new Date(t.transactionDate);
+        if (d < cutoff) continue;
+      }
       const amount = parseFloat(t.amount || 0);
       if (t.type === 'income') {
         inc += amount;
@@ -160,7 +189,14 @@ const Dashboard = () => {
       .slice(0, 5);
 
     return { totalIncome: inc, totalExpense: exp, net: inc - exp, byCategory: byCat };
-  }, [transactions]);
+  }, [transactions, period]);
+
+  const periodLabel = useMemo(() => ({
+    '30d': 'Last 30 days',
+    '90d': 'Last 90 days',
+    '1y': 'Last 12 months',
+    all: 'All time',
+  })[period] ?? 'Last 30 days', [period]);
 
   const recent = useMemo(
     () =>
@@ -254,6 +290,54 @@ const Dashboard = () => {
       refresh();
     } catch {
       setError('Failed to save transaction.');
+    }
+  };
+
+  const openQuickAdd = () => {
+    setQuickAddError(null);
+    setQuickForm({
+      description: '',
+      amount: '',
+      category: '',
+      transactionDate: new Date().toISOString().split('T')[0],
+      type: 'expense',
+    });
+    setQuickAddOpen(true);
+  };
+
+  const handleQuickSave = async () => {
+    setQuickAddError(null);
+    const amount = parseFloat(quickForm.amount);
+    if (!Number.isFinite(amount) || amount <= 0) {
+      setQuickAddError('Amount must be greater than 0.');
+      return;
+    }
+    if (!quickForm.category.trim()) {
+      setQuickAddError('Category is required.');
+      return;
+    }
+    setQuickAddSaving(true);
+    try {
+      const payload = {
+        description: quickForm.description.trim() || quickForm.category.trim(),
+        amount: Math.abs(amount),
+        category: quickForm.category.trim(),
+        transactionDate: quickForm.transactionDate,
+        type: quickForm.type,
+        userId: user.id,
+      };
+      const saved = await transactionService.addTransaction(payload);
+      // Seed local state so the cards reflect the new row immediately
+      // — refresh() will reconcile with backend data shortly after.
+      setTransactions((prev) => [saved, ...prev]);
+      setQuickAddOpen(false);
+      // Re-fetch in the background so subscriptions / anomalies /
+      // forecast pick up the new row once the cache eviction lands.
+      refresh();
+    } catch (err) {
+      setQuickAddError(err?.response?.data?.message || 'Failed to save transaction.');
+    } finally {
+      setQuickAddSaving(false);
     }
   };
 
@@ -369,14 +453,15 @@ const Dashboard = () => {
             <span className="text-zinc-400 dark:text-zinc-600"> 👋</span>
           </h1>
           <p className="text-sm text-zinc-500 dark:text-zinc-400 mt-1">
-            Here's your money this month at a glance.
+            Here's your money over the {period === 'all' ? 'full history' : periodLabel.toLowerCase()}.
           </p>
         </div>
-        <Button asChild variant="gradient" size="lg" className="shadow-lg shadow-primary/30">
-          <Link to="/transactions">
+        <div className="flex items-center gap-2 flex-wrap">
+          <PeriodSwitcher value={period} onChange={setPeriod} />
+          <Button variant="gradient" size="lg" onClick={openQuickAdd} className="shadow-lg shadow-primary/30">
             <Plus className="h-4 w-4" /> Add transaction
-          </Link>
-        </Button>
+          </Button>
+        </div>
       </header>
 
       {/* Hero stat row */}
@@ -388,6 +473,7 @@ const Dashboard = () => {
           colorize
           accent="brand"
           icon={Wallet}
+          subtitle={periodLabel}
           delay={0}
         />
         <StatCard
@@ -395,6 +481,7 @@ const Dashboard = () => {
           value={totalIncome}
           tone="gain"
           icon={ArrowUpRight}
+          subtitle={periodLabel}
           delay={0.05}
         />
         <StatCard
@@ -402,6 +489,7 @@ const Dashboard = () => {
           value={totalExpense}
           tone="loss"
           icon={ArrowDownRight}
+          subtitle={periodLabel}
           delay={0.1}
         />
       </section>
@@ -413,7 +501,7 @@ const Dashboard = () => {
           loading={generatingInsight}
           onGenerate={handleGenerateInsight}
         />
-        <CategoryBreakdownCard categories={byCategory} totalExpense={totalExpense} />
+        <CategoryBreakdownCard categories={byCategory} totalExpense={totalExpense} subtitle={periodLabel} />
       </section>
 
       {/* Anomalies — flagged spending that's well outside normal range
@@ -520,13 +608,27 @@ const Dashboard = () => {
           />
         )}
       </AnimatePresence>
+
+      {/* Quick-add modal */}
+      <AnimatePresence>
+        {quickAddOpen && (
+          <QuickAddModal
+            form={quickForm}
+            onChange={(patch) => setQuickForm({ ...quickForm, ...patch })}
+            onClose={() => !quickAddSaving && setQuickAddOpen(false)}
+            onSave={handleQuickSave}
+            saving={quickAddSaving}
+            error={quickAddError}
+          />
+        )}
+      </AnimatePresence>
     </AppLayout>
   );
 };
 
 // ───────── Sub-components ─────────
 
-function StatCard({ label, value, tone, accent, showSign, colorize, icon: Icon, delay = 0 }) {
+function StatCard({ label, value, tone, accent, showSign, colorize, icon: Icon, subtitle = 'This month', delay = 0 }) {
   const isBrand = accent === 'brand';
   return (
     <motion.div
@@ -582,7 +684,7 @@ function StatCard({ label, value, tone, accent, showSign, colorize, icon: Icon, 
         </CardHeader>
         <CardContent className="pt-0 pb-5">
           <p className={cn('text-xs', isBrand ? 'text-white/65' : 'text-zinc-500 dark:text-zinc-400')}>
-            This month
+            {subtitle}
           </p>
         </CardContent>
       </Card>
@@ -629,14 +731,14 @@ function InsightCard({ insight, loading, onGenerate }) {
   );
 }
 
-function CategoryBreakdownCard({ categories, totalExpense }) {
+function CategoryBreakdownCard({ categories, totalExpense, subtitle = 'This month' }) {
   return (
     <Card>
       <CardHeader>
         <CardDescription className="flex items-center gap-2">
           <TrendingUp className="h-4 w-4 text-zinc-400" /> Top spending categories
         </CardDescription>
-        <CardTitle className="text-lg">This month</CardTitle>
+        <CardTitle className="text-lg">{subtitle}</CardTitle>
       </CardHeader>
       <CardContent>
         {categories.length === 0 ? (
@@ -953,6 +1055,158 @@ function formatShortDate(iso) {
   if (!iso) return '—';
   const d = new Date(iso);
   return d.toLocaleDateString('en-IN', { day: 'numeric', month: 'short' });
+}
+
+function QuickAddModal({ form, onChange, onClose, onSave, saving, error }) {
+  return (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      className="fixed inset-0 z-50 grid place-items-center bg-black/60 backdrop-blur-sm p-4"
+      onClick={onClose}
+    >
+      <motion.div
+        initial={{ opacity: 0, scale: 0.95, y: 8 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        exit={{ opacity: 0, scale: 0.95 }}
+        transition={{ duration: 0.18 }}
+        className="w-full max-w-md"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <Card>
+          <form onSubmit={(e) => { e.preventDefault(); onSave(); }}>
+            <CardHeader>
+              <CardTitle>Quick add</CardTitle>
+              <CardDescription>Record a transaction without leaving the dashboard.</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {/* Type toggle */}
+              <div className="flex gap-1 p-1 rounded-md bg-zinc-100 dark:bg-zinc-900">
+                {[
+                  { v: 'expense', label: 'Expense', tone: 'loss' },
+                  { v: 'income', label: 'Income', tone: 'gain' },
+                ].map(({ v, label, tone }) => (
+                  <button
+                    key={v}
+                    type="button"
+                    onClick={() => onChange({ type: v })}
+                    className={cn(
+                      'flex-1 px-3 py-1.5 rounded text-sm font-medium transition-colors relative',
+                      form.type === v
+                        ? `text-[hsl(var(--${tone}))]`
+                        : 'text-zinc-500 dark:text-zinc-400'
+                    )}
+                  >
+                    {form.type === v && (
+                      <motion.span
+                        layoutId="dash-quick-type-pill"
+                        className="absolute inset-0 -z-10 rounded bg-white dark:bg-zinc-800 shadow-sm"
+                        transition={{ type: 'spring', stiffness: 400, damping: 32 }}
+                      />
+                    )}
+                    {label}
+                  </button>
+                ))}
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="qa-amount">Amount</Label>
+                <Input
+                  id="qa-amount"
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  placeholder="0.00"
+                  value={form.amount}
+                  onChange={(e) => onChange({ amount: e.target.value })}
+                  required
+                  autoFocus
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="qa-cat">Category</Label>
+                <Input
+                  id="qa-cat"
+                  placeholder="Groceries, Rent, Salary…"
+                  value={form.category}
+                  onChange={(e) => onChange({ category: e.target.value })}
+                  required
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="qa-desc">
+                  Description <span className="text-zinc-500 font-normal">(optional)</span>
+                </Label>
+                <Input
+                  id="qa-desc"
+                  placeholder="Weekly shop"
+                  value={form.description}
+                  onChange={(e) => onChange({ description: e.target.value })}
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="qa-date">Date</Label>
+                <Input
+                  id="qa-date"
+                  type="date"
+                  value={form.transactionDate}
+                  onChange={(e) => onChange({ transactionDate: e.target.value })}
+                  required
+                />
+              </div>
+              {error && (
+                <div className="px-3 py-2 rounded-md border border-destructive/30 bg-destructive/10 text-destructive text-sm">
+                  {error}
+                </div>
+              )}
+            </CardContent>
+            <CardFooter className="justify-end gap-2">
+              <Button type="button" variant="outline" onClick={onClose} disabled={saving}>Cancel</Button>
+              <Button type="submit" variant="gradient" disabled={saving}>
+                {saving ? 'Saving…' : 'Add'}
+              </Button>
+            </CardFooter>
+          </form>
+        </Card>
+      </motion.div>
+    </motion.div>
+  );
+}
+
+function PeriodSwitcher({ value, onChange }) {
+  const options = [
+    { v: '30d', label: '30D' },
+    { v: '90d', label: '90D' },
+    { v: '1y', label: '1Y' },
+    { v: 'all', label: 'All' },
+  ];
+  return (
+    <div className="flex gap-1 p-1 rounded-md bg-zinc-100 dark:bg-zinc-900">
+      {options.map(({ v, label }) => (
+        <button
+          key={v}
+          type="button"
+          onClick={() => onChange(v)}
+          className={cn(
+            'px-3 py-1.5 rounded text-xs font-medium transition-colors relative',
+            value === v
+              ? 'text-zinc-900 dark:text-zinc-50'
+              : 'text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-50'
+          )}
+          aria-pressed={value === v}
+        >
+          {value === v && (
+            <motion.span
+              layoutId="dashboard-period-pill"
+              className="absolute inset-0 -z-10 rounded bg-white dark:bg-zinc-800 shadow-sm"
+              transition={{ type: 'spring', stiffness: 400, damping: 32 }}
+            />
+          )}
+          {label}
+        </button>
+      ))}
+    </div>
+  );
 }
 
 function EditModal({ form, onChange, onClose, onSave, onDelete }) {

@@ -15,6 +15,7 @@ import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -99,5 +100,47 @@ public class TransactionService {
     })
     public void deleteTransaction(@NonNull Long id) {
         transactionRepository.deleteById(id);
+    }
+
+    /**
+     * Bulk delete by ids, scoped to a single user. Returns the number of
+     * rows actually deleted — ids belonging to other users are silently
+     * skipped (the caller should already have authorized the user).
+     */
+    @Transactional
+    @Caching(evict = {
+            @CacheEvict(value = RedisCacheConfig.CACHE_TRANSACTIONS, allEntries = true),
+            @CacheEvict(value = RedisCacheConfig.CACHE_INSIGHTS, allEntries = true)
+    })
+    public int bulkDelete(@NonNull Long userId, @NonNull List<Long> ids) {
+        if (ids.isEmpty()) return 0;
+        List<Transaction> owned = transactionRepository.findAllById(ids).stream()
+                .filter(t -> t.getUser() != null && userId.equals(t.getUser().getId()))
+                .toList();
+        transactionRepository.deleteAll(owned);
+        return owned.size();
+    }
+
+    /**
+     * Bulk-create transactions from a CSV import. All rows save in one
+     * transaction so a mid-batch failure rolls back cleanly. Each save
+     * publishes a TransactionSavedEvent; the RAG indexer consumes those
+     * after-commit and embeds asynchronously, so the request returns as
+     * soon as the rows hit Postgres rather than waiting on Gemini.
+     */
+    @Transactional
+    @Caching(evict = {
+            @CacheEvict(value = RedisCacheConfig.CACHE_TRANSACTIONS, allEntries = true),
+            @CacheEvict(value = RedisCacheConfig.CACHE_INSIGHTS, allEntries = true)
+    })
+    public List<Transaction> bulkSave(@NonNull User user, @NonNull List<Transaction> drafts) {
+        List<Transaction> saved = new ArrayList<>(drafts.size());
+        for (Transaction t : drafts) {
+            t.setUser(user);
+            Transaction s = transactionRepository.save(t);
+            events.publishEvent(new TransactionSavedEvent(s));
+            saved.add(s);
+        }
+        return saved;
     }
 }

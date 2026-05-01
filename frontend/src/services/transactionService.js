@@ -49,6 +49,19 @@ const transactionService = {
     const response = await api.delete(`/transactions/${id}`);
     return response.data;
   },
+
+  // Bulk-create from a parsed CSV. Rows must already match the
+  // ImportRow contract (see backend/dto/ImportRow.java).
+  bulkImport: async (userId, rows) => {
+    const response = await api.post(`/transactions/user/${userId}/import`, { rows });
+    return response.data;
+  },
+
+  // Bulk delete by ids. Returns { deleted: N }.
+  bulkDelete: async (userId, ids) => {
+    const response = await api.post(`/transactions/user/${userId}/bulk-delete`, { ids });
+    return response.data;
+  },
 };
 
 export default transactionService;

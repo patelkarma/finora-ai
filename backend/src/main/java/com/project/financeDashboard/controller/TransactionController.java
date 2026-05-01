@@ -1,5 +1,8 @@
 package com.project.financeDashboard.controller;
 
+import com.project.financeDashboard.dto.BulkImportRequest;
+import com.project.financeDashboard.dto.ImportResult;
+import com.project.financeDashboard.dto.ImportRow;
 import com.project.financeDashboard.model.Transaction;
 import com.project.financeDashboard.model.User;
 import com.project.financeDashboard.service.TransactionService;
@@ -14,6 +17,10 @@ import org.springframework.web.bind.annotation.*;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 
+import java.math.RoundingMode;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @RestController
@@ -116,6 +123,59 @@ public class TransactionController {
 
         Transaction saved = transactionService.saveTransaction(existing);
         return ResponseEntity.ok(saved);
+    }
+
+    /**
+     * CSV bulk import. Frontend parses the file client-side, shows a
+     * preview, and POSTs the parsed rows as JSON — keeps multipart out
+     * of the wire format and lets the user fix bad rows before they hit
+     * the backend. All rows save in one transaction (rollback on any
+     * failure) so a partial import never leaves the user with mystery
+     * half-state.
+     */
+    @PostMapping("/user/{userId}/import")
+    public ResponseEntity<ImportResult> importTransactions(
+            @PathVariable Long userId,
+            @Valid @RequestBody BulkImportRequest body) {
+
+        Optional<User> authUser = getAuthenticatedUser();
+        if (authUser.isEmpty() || !authUser.get().getId().equals(userId)) {
+            return ResponseEntity.status(403).build();
+        }
+
+        List<Transaction> drafts = new ArrayList<>(body.getRows().size());
+        for (ImportRow row : body.getRows()) {
+            Transaction t = new Transaction();
+            t.setAmount(row.getAmount().setScale(2, RoundingMode.HALF_UP));
+            t.setCategory(row.getCategory().trim());
+            t.setType(row.getType());
+            String desc = row.getDescription();
+            t.setDescription(desc == null || desc.isBlank() ? row.getCategory().trim() : desc.trim());
+            t.setTransactionDate(row.getDate());
+            drafts.add(t);
+        }
+
+        List<Transaction> saved = transactionService.bulkSave(authUser.get(), drafts);
+        return ResponseEntity.ok(new ImportResult(saved.size()));
+    }
+
+    /**
+     * Bulk delete by ids. Returns {deleted: N}. Ids belonging to other
+     * users are silently skipped at the service layer; we don't fail
+     * the whole batch for a stale id either.
+     */
+    @PostMapping("/user/{userId}/bulk-delete")
+    public ResponseEntity<Map<String, Integer>> bulkDelete(
+            @PathVariable Long userId,
+            @RequestBody Map<String, List<Long>> body) {
+
+        Optional<User> authUser = getAuthenticatedUser();
+        if (authUser.isEmpty() || !authUser.get().getId().equals(userId)) {
+            return ResponseEntity.status(403).build();
+        }
+        List<Long> ids = body.getOrDefault("ids", List.of());
+        int deleted = transactionService.bulkDelete(userId, ids);
+        return ResponseEntity.ok(Map.of("deleted", deleted));
     }
 
     // Delete transaction by id

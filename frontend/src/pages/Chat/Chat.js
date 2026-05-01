@@ -1,6 +1,6 @@
 import React, { useContext, useEffect, useRef, useState, useCallback } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { Send, Sparkles, RefreshCw, Database } from 'lucide-react';
+import { Send, Sparkles, RefreshCw, Database, Copy, Check } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { AuthContext } from '../../context/AuthContext';
@@ -270,53 +270,112 @@ const Chat = () => {
 
 function Bubble({ role, content, streaming = false }) {
   const isUser = role === 'user';
+  const [copied, setCopied] = useState(false);
+
+  // Copy the raw markdown — that's what the user sees rendered, and it
+  // round-trips cleanly into Notion / Slack / a doc that will re-render
+  // it. Stripping the markdown first would make the copy worse.
+  const onCopy = useCallback(async () => {
+    try {
+      // Some browsers block the Clipboard API in non-secure contexts;
+      // fall back to the legacy execCommand path so the button still
+      // works on http localhost previews.
+      if (navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(content);
+      } else {
+        const ta = document.createElement('textarea');
+        ta.value = content;
+        ta.style.position = 'fixed';
+        ta.style.left = '-9999px';
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand('copy');
+        ta.remove();
+      }
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1500);
+    } catch {
+      // Silent — failure surfaces as the icon staying as Copy.
+    }
+  }, [content]);
+
   return (
     <motion.div
       layout
       initial={{ opacity: 0, y: 6 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.22 }}
-      className={cn('flex gap-3', isUser ? 'justify-end' : 'justify-start')}
+      className={cn('flex gap-3 group', isUser ? 'justify-end' : 'justify-start')}
     >
       {!isUser && (
         <div className="h-8 w-8 rounded-full bg-brand-gradient grid place-items-center flex-shrink-0 shadow-sm shadow-primary/30">
           <Sparkles className="h-3.5 w-3.5 text-white" />
         </div>
       )}
-      <div
-        className={cn(
-          'rounded-2xl px-4 py-2.5 text-sm leading-relaxed max-w-[80%] sm:max-w-[70%]',
-          // User turns are plain text — preserve newlines and stop there.
-          isUser && 'whitespace-pre-wrap',
-          isUser
-            ? 'bg-brand-gradient text-white rounded-br-sm shadow-md shadow-primary/20'
-            : 'bg-zinc-100 dark:bg-zinc-900 text-zinc-900 dark:text-zinc-50 rounded-bl-sm'
-        )}
-      >
-        {/*
-         * Assistant turns may contain markdown — Gemini emits bullets,
-         * **bold**, occasional code spans for amounts/dates. Rendering
-         * as plaintext loses all of that. user turns stay verbatim;
-         * we don't want a stray underscore to italicize what the user
-         * actually typed.
-         */}
-        {isUser ? (
-          content
-        ) : (
-          <ReactMarkdown
-            remarkPlugins={[remarkGfm]}
-            components={MARKDOWN_COMPONENTS}
+      <div className={cn('flex flex-col max-w-[80%] sm:max-w-[70%]', isUser ? 'items-end' : 'items-start')}>
+        <div
+          className={cn(
+            'rounded-2xl px-4 py-2.5 text-sm leading-relaxed',
+            // User turns are plain text — preserve newlines and stop there.
+            isUser && 'whitespace-pre-wrap',
+            isUser
+              ? 'bg-brand-gradient text-white rounded-br-sm shadow-md shadow-primary/20'
+              : 'bg-zinc-100 dark:bg-zinc-900 text-zinc-900 dark:text-zinc-50 rounded-bl-sm'
+          )}
+        >
+          {/*
+           * Assistant turns may contain markdown — Gemini emits bullets,
+           * **bold**, occasional code spans for amounts/dates. Rendering
+           * as plaintext loses all of that. user turns stay verbatim;
+           * we don't want a stray underscore to italicize what the user
+           * actually typed.
+           */}
+          {isUser ? (
+            content
+          ) : (
+            <ReactMarkdown
+              remarkPlugins={[remarkGfm]}
+              components={MARKDOWN_COMPONENTS}
+            >
+              {content}
+            </ReactMarkdown>
+          )}
+          {streaming && (
+            <motion.span
+              aria-hidden
+              className="inline-block w-1.5 h-3.5 ml-0.5 -mb-0.5 rounded-sm bg-zinc-500 dark:bg-zinc-400"
+              animate={{ opacity: [1, 0.2, 1] }}
+              transition={{ duration: 0.9, repeat: Infinity }}
+            />
+          )}
+        </div>
+        {/* Copy lives below the assistant bubble. Hidden while streaming
+            (a partial answer in someone else's doc would be worse than
+            no copy) and revealed on hover/focus on desktop, always
+            visible on mobile via group-touch (touch devices don't have
+            hover so we just leave it visible at low opacity). */}
+        {!isUser && !streaming && content && (
+          <button
+            type="button"
+            onClick={onCopy}
+            aria-label={copied ? 'Copied' : 'Copy answer'}
+            className={cn(
+              'mt-1.5 inline-flex items-center gap-1 px-2 py-1 rounded text-xs',
+              'text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-50',
+              'hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-all',
+              'opacity-60 sm:opacity-0 sm:group-hover:opacity-100 focus-visible:opacity-100'
+            )}
           >
-            {content}
-          </ReactMarkdown>
-        )}
-        {streaming && (
-          <motion.span
-            aria-hidden
-            className="inline-block w-1.5 h-3.5 ml-0.5 -mb-0.5 rounded-sm bg-zinc-500 dark:bg-zinc-400"
-            animate={{ opacity: [1, 0.2, 1] }}
-            transition={{ duration: 0.9, repeat: Infinity }}
-          />
+            {copied ? (
+              <>
+                <Check className="h-3 w-3" /> Copied
+              </>
+            ) : (
+              <>
+                <Copy className="h-3 w-3" /> Copy
+              </>
+            )}
+          </button>
         )}
       </div>
     </motion.div>
