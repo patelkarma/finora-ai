@@ -1,9 +1,10 @@
 import React, { useState, useContext } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
+import { Mail, Lock } from 'lucide-react';
 import api from '../../services/api';
 import { AuthContext } from '../../context/AuthContext';
-import { AuthLayout } from '../../components/auth-layout';
+import { AuthSplitLayout } from '../../components/auth-split-layout';
 import { AuthMessage } from '../../components/auth-message';
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
@@ -57,19 +58,26 @@ const Login = () => {
   };
 
   return (
-    <AuthLayout title="Welcome back" subtitle="Sign in to continue to Finora">
-      <form onSubmit={handlePasswordLogin} className="space-y-4">
+    <AuthSplitLayout title="Welcome back" subtitle="Sign in to continue to Finora">
+      <form onSubmit={handlePasswordLogin} className="space-y-5">
         <div className="space-y-2">
           <Label htmlFor="email">Email</Label>
-          <Input
-            id="email"
-            type="email"
-            required
-            autoComplete="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            placeholder="you@example.com"
-          />
+          {/* Inputs get a leading icon for visual structure — matches
+              the polished feel of the brand panel without changing
+              the underlying Input primitive. */}
+          <div className="relative">
+            <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+            <Input
+              id="email"
+              type="email"
+              required
+              autoComplete="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="you@example.com"
+              className="pl-9 h-11"
+            />
+          </div>
         </div>
 
         <div className="space-y-2">
@@ -82,15 +90,19 @@ const Login = () => {
               Forgot password?
             </Link>
           </div>
-          <Input
-            id="password"
-            type="password"
-            required
-            autoComplete="current-password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            placeholder="••••••••"
-          />
+          <div className="relative">
+            <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+            <Input
+              id="password"
+              type="password"
+              required
+              autoComplete="current-password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="••••••••"
+              className="pl-9 h-11"
+            />
+          </div>
         </div>
 
         <label className="flex items-center gap-2 text-sm text-muted-foreground select-none cursor-pointer">
@@ -100,10 +112,10 @@ const Login = () => {
             onChange={(e) => setRemember(e.target.checked)}
             className="h-4 w-4 rounded border-input accent-primary"
           />
-          Remember me
+          Keep me signed in
         </label>
 
-        <motion.div whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.99 }}>
+        <motion.div whileTap={{ scale: 0.99 }}>
           <Button
             type="submit"
             variant="gradient"
@@ -120,10 +132,10 @@ const Login = () => {
 
       <div className="relative my-6">
         <div className="absolute inset-0 flex items-center">
-          <div className="w-full border-t" />
+          <div className="w-full border-t border-border" />
         </div>
-        <div className="relative flex justify-center text-xs uppercase">
-          <span className="bg-card/80 px-2 text-muted-foreground">or</span>
+        <div className="relative flex justify-center text-xs uppercase tracking-wider">
+          <span className="bg-background px-3 text-muted-foreground">or continue with</span>
         </div>
       </div>
 
@@ -131,7 +143,7 @@ const Login = () => {
         type="button"
         variant="outline"
         size="lg"
-        className="w-full"
+        className="w-full h-11"
         onClick={handleGoogleLogin}
       >
         <img
@@ -139,16 +151,16 @@ const Login = () => {
           alt=""
           className="h-5 w-5"
         />
-        Continue with Google
+        Google
       </Button>
 
-      <p className="mt-6 text-center text-sm text-muted-foreground">
+      <p className="mt-8 text-center text-sm text-muted-foreground">
         Don't have an account?{' '}
         <Link to="/signup" className="text-primary font-medium hover:underline">
-          Sign up
+          Create one
         </Link>
       </p>
-    </AuthLayout>
+    </AuthSplitLayout>
   );
 };
 

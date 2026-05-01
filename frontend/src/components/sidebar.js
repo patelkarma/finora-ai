@@ -79,23 +79,29 @@ export default function Sidebar() {
         </div>
       </header>
 
-      {/* Desktop sidebar */}
-      <aside className="hidden lg:flex fixed top-0 left-0 z-30 h-screen w-60 flex-col border-r border-zinc-200/60 dark:border-zinc-800/60 bg-white/60 dark:bg-zinc-950/60 backdrop-blur-xl">
-        {/* Brand */}
-        <Link to="/dashboard" className="flex items-center gap-2.5 px-5 h-16 border-b border-zinc-200/60 dark:border-zinc-800/60">
+      {/* Desktop sidebar — glassy panel that floats over the
+          atmospheric mesh defined in AppLayout. Slightly translucent
+          background lets the brand-color drift through without making
+          text unreadable. */}
+      <aside className="hidden lg:flex fixed top-0 left-0 z-30 h-screen w-60 flex-col border-r border-border/70 bg-card/60 dark:bg-card/40 backdrop-blur-xl">
+        {/* Brand — slightly larger logo + subtle pulse on the badge so
+            the eye lands here first when the page loads. */}
+        <Link to="/dashboard" className="flex items-center gap-2.5 px-5 h-16 border-b border-border/70">
           <motion.div
-            className="h-9 w-9 rounded-lg bg-brand-gradient grid place-items-center shadow-md shadow-primary/30"
+            className="h-9 w-9 rounded-xl bg-brand-gradient grid place-items-center shadow-glow-sm"
             whileHover={{ rotate: 8, scale: 1.05 }}
             transition={{ type: 'spring', stiffness: 300 }}
           >
             <Sparkles className="h-4 w-4 text-white" />
           </motion.div>
-          <span className="text-base font-semibold tracking-tight text-zinc-900 dark:text-zinc-50">
+          <span className="text-base font-semibold tracking-tight">
             Finora
           </span>
         </Link>
 
-        {/* Nav */}
+        {/* Nav — active item gets a brand-tinted pill (left border
+            accent + soft brand background) so the current page
+            telegraphs strongly without hijacking the brand gradient. */}
         <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
           {NAV_ITEMS.map(({ to, label, icon: Icon }) => (
             <NavLink
@@ -105,21 +111,28 @@ export default function Sidebar() {
                 cn(
                   'relative flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors',
                   isActive
-                    ? 'text-zinc-900 dark:text-zinc-50'
-                    : 'text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-50'
+                    ? 'text-foreground'
+                    : 'text-muted-foreground hover:text-foreground'
                 )
               }
             >
               {({ isActive }) => (
                 <>
                   {isActive && (
-                    <motion.span
-                      layoutId="sidebar-active"
-                      className="absolute inset-0 -z-10 rounded-lg bg-zinc-100 dark:bg-zinc-800/60"
-                      transition={{ type: 'spring', stiffness: 380, damping: 32 }}
-                    />
+                    <>
+                      <motion.span
+                        layoutId="sidebar-active"
+                        className="absolute inset-0 -z-10 rounded-lg bg-primary/12 dark:bg-primary/15 ring-1 ring-primary/20"
+                        transition={{ type: 'spring', stiffness: 380, damping: 32 }}
+                      />
+                      <motion.span
+                        layoutId="sidebar-active-bar"
+                        className="absolute left-0 top-1.5 bottom-1.5 w-0.5 rounded-r bg-brand-gradient"
+                        transition={{ type: 'spring', stiffness: 380, damping: 32 }}
+                      />
+                    </>
                   )}
-                  <Icon className="h-4 w-4 flex-shrink-0" />
+                  <Icon className={cn('h-4 w-4 flex-shrink-0', isActive && 'text-primary')} />
                   <span>{label}</span>
                 </>
               )}

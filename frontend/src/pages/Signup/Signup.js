@@ -4,7 +4,7 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { ArrowLeft, Check } from 'lucide-react';
 import api from '../../services/api';
 import { AuthContext } from '../../context/AuthContext';
-import { AuthLayout } from '../../components/auth-layout';
+import { AuthSplitLayout } from '../../components/auth-split-layout';
 import { AuthMessage } from '../../components/auth-message';
 import { PasswordStrength } from '../../components/password-strength';
 import { Button } from '../../components/ui/button';
@@ -170,10 +170,10 @@ const Signup = () => {
   };
 
   return (
-    <AuthLayout
+    <AuthSplitLayout
       title="Create your account"
-      subtitle="Smart finances, in three quick steps."
-      step={`Step ${step} of 3`}
+      subtitle={`Step ${step} of 3 — smart finances in three quick steps.`}
+      mobileHeadline="Get started in 2 minutes"
     >
       {/* Step indicator dots */}
       <div className="flex items-center justify-center gap-2 mb-6">
@@ -372,7 +372,7 @@ const Signup = () => {
           Sign in
         </Link>
       </p>
-    </AuthLayout>
+    </AuthSplitLayout>
   );
 };
 
