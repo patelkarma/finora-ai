@@ -66,7 +66,7 @@ const Login = () => {
               the polished feel of the brand panel without changing
               the underlying Input primitive. */}
           <div className="relative">
-            <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+            <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/70 pointer-events-none" />
             <Input
               id="email"
               type="email"
@@ -75,7 +75,7 @@ const Login = () => {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="you@example.com"
-              className="pl-9 h-11"
+              className="pl-10 h-11"
             />
           </div>
         </div>
@@ -91,7 +91,7 @@ const Login = () => {
             </Link>
           </div>
           <div className="relative">
-            <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+            <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/70 pointer-events-none" />
             <Input
               id="password"
               type="password"
@@ -100,7 +100,7 @@ const Login = () => {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="••••••••"
-              className="pl-9 h-11"
+              className="pl-10 h-11"
             />
           </div>
         </div>

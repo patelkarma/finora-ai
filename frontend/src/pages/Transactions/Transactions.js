@@ -312,13 +312,13 @@ const Transactions = () => {
       <Card className="mb-6">
         <CardContent className="p-4 flex flex-col sm:flex-row gap-3">
           <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-400 pointer-events-none" />
+            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/70 pointer-events-none" />
             <Input
               type="search"
               placeholder="Search description or category…"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="pl-9"
+              className="pl-10"
             />
           </div>
           <div className="flex gap-1 p-1 rounded-md bg-zinc-100 dark:bg-zinc-900">
