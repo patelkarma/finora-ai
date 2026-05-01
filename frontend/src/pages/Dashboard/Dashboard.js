@@ -498,39 +498,38 @@ const Dashboard = () => {
         </div>
       </header>
 
-      {/* Hero KPI band — NET CASHFLOW dominates as the centerpiece
-          (5 cols on desktop) with an oversized number, large sparkline
-          and a glowing brand surface. INCOME / EXPENSES sit in the
-          right two columns at standard size with their own inline
-          sparklines. The hierarchy makes "are you net positive" the
-          one thing the eye lands on first. */}
-      <section className="grid grid-cols-1 lg:grid-cols-7 gap-4 mb-8">
+      {/* Hero KPI band — three same-height cards. The Net Cashflow
+          centerpiece earns its visual weight from the brand gradient
+          + slightly larger display number + bottom sparkline rather
+          than from spatial dominance. Keeping all three cards at one
+          row height matches how Stripe / Linear lay out KPI strips,
+          and avoids the "giant gradient slab next to two empty
+          letterboxes" problem the previous 5/2 split produced. */}
+      <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
         <HeroNetCard
           value={animNet}
           target={net}
           spark={sparkNet}
           subtitle={periodLabel}
         />
-        <div className="lg:col-span-2 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 gap-4">
-          <StatCard
-            label="Income"
-            value={animIncome}
-            tone="gain"
-            icon={ArrowUpRight}
-            subtitle={periodLabel}
-            spark={sparkIncome}
-            delay={0.05}
-          />
-          <StatCard
-            label="Expenses"
-            value={animExpense}
-            tone="loss"
-            icon={ArrowDownRight}
-            subtitle={periodLabel}
-            spark={sparkExpense}
-            delay={0.1}
-          />
-        </div>
+        <StatCard
+          label="Income"
+          value={animIncome}
+          tone="gain"
+          icon={ArrowUpRight}
+          subtitle={periodLabel}
+          spark={sparkIncome}
+          delay={0.05}
+        />
+        <StatCard
+          label="Expenses"
+          value={animExpense}
+          tone="loss"
+          icon={ArrowDownRight}
+          subtitle={periodLabel}
+          spark={sparkExpense}
+          delay={0.1}
+        />
       </section>
 
       {/* Insight + breakdown row */}
@@ -687,73 +686,70 @@ function HeroNetCard({ value, target, spark, subtitle }) {
       initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
-      whileHover={{ y: -3 }}
-      className="lg:col-span-5 group h-full"
+      whileHover={{ y: -2 }}
+      className="group h-full"
     >
       <Card
         variant="elevated"
         className="relative overflow-hidden h-full bg-brand-gradient border-none text-white
-                   shadow-glow-lg group-hover:shadow-glow-lg transition-shadow duration-300"
+                   shadow-glow-md group-hover:shadow-glow-lg transition-shadow duration-300"
       >
         {/* Orbital blurs — abstract "expensive software" lighting. */}
-        <div className="absolute -top-24 -right-16 h-64 w-64 rounded-full bg-white/15 blur-3xl pointer-events-none" />
-        <div className="absolute -bottom-20 -left-10 h-44 w-72 rounded-full bg-white/10 blur-3xl pointer-events-none" />
+        <div className="absolute -top-16 -right-12 h-44 w-44 rounded-full bg-white/15 blur-3xl pointer-events-none" />
+        <div className="absolute -bottom-16 -left-8 h-36 w-56 rounded-full bg-white/10 blur-3xl pointer-events-none" />
 
-        <CardHeader className="pb-2">
+        <CardContent className="p-5 flex flex-col gap-2.5 h-full relative">
           <div className="flex items-center justify-between">
-            <CardDescription className="text-white/75 text-xs uppercase tracking-wider flex items-center gap-1.5">
-              <Wallet className="h-3.5 w-3.5" /> Net cashflow
+            <CardDescription className="text-white/75 text-[10px] uppercase tracking-wider flex items-center gap-1.5">
+              <Wallet className="h-3 w-3" /> Net cashflow
             </CardDescription>
             <span className={cn(
-              'text-[10px] uppercase tracking-wider px-2 py-0.5 rounded-full font-medium',
+              'text-[9px] uppercase tracking-wider px-2 py-0.5 rounded-full font-medium',
               isPositive ? 'bg-white/20 text-white' : 'bg-white/15 text-white/80'
             )}>
               {isPositive ? 'positive' : 'deficit'}
             </span>
           </div>
-        </CardHeader>
 
-        <CardContent className="pt-2 pb-4 relative">
-          <div className="num-display text-display-sm sm:text-display lg:text-display font-semibold leading-none truncate">
+          <div className="num-display text-3xl xl:text-4xl font-semibold tracking-tight leading-tight truncate">
             {formatted}
           </div>
-          <p className="text-xs text-white/65 mt-3">
-            {subtitle}
-          </p>
-        </CardContent>
 
-        {/* Bottom-aligned wide sparkline. White stroke at low opacity
-            keeps the chart legible without competing with the number. */}
-        {spark && spark.length > 1 && (
-          <div className="absolute inset-x-0 bottom-0 h-20 pointer-events-none opacity-90">
-            <svg viewBox="0 0 100 30" preserveAspectRatio="none" className="w-full h-full">
-              <defs>
-                <linearGradient id="hero-net-fill" x1="0" x2="0" y1="0" y2="1">
-                  <stop offset="0%"  stopColor="rgba(255,255,255,0.35)" />
-                  <stop offset="100%" stopColor="rgba(255,255,255,0)" />
-                </linearGradient>
-              </defs>
-              {(() => {
-                const min = Math.min(...spark);
-                const max = Math.max(...spark);
-                const range = max - min || 1;
-                const stepX = spark.length > 1 ? 100 / (spark.length - 1) : 0;
-                const pts = spark.map((v, i) => ({
-                  x: i * stepX,
-                  y: 30 - ((v - min) / range) * 26 - 2,
-                }));
-                const line = pts.map((p, i) => `${i === 0 ? 'M' : 'L'}${p.x},${p.y}`).join(' ');
-                const fill = `${line} L100,30 L0,30 Z`;
-                return (
-                  <>
-                    <path d={fill} fill="url(#hero-net-fill)" />
-                    <path d={line} fill="none" stroke="rgba(255,255,255,0.85)" strokeWidth="1.4" vectorEffect="non-scaling-stroke" strokeLinecap="round" strokeLinejoin="round" />
-                  </>
-                );
-              })()}
-            </svg>
-          </div>
-        )}
+          <p className="text-[11px] text-white/65">{subtitle}</p>
+
+          {/* Compact sparkline strip — anchored to the bottom but only
+              ~32px tall so it doesn't dominate the card. */}
+          {spark && spark.length > 1 && (
+            <div className="mt-auto h-8 -mx-2 -mb-2 pointer-events-none opacity-95">
+              <svg viewBox="0 0 100 30" preserveAspectRatio="none" className="w-full h-full">
+                <defs>
+                  <linearGradient id="hero-net-fill" x1="0" x2="0" y1="0" y2="1">
+                    <stop offset="0%"  stopColor="rgba(255,255,255,0.35)" />
+                    <stop offset="100%" stopColor="rgba(255,255,255,0)" />
+                  </linearGradient>
+                </defs>
+                {(() => {
+                  const min = Math.min(...spark);
+                  const max = Math.max(...spark);
+                  const range = max - min || 1;
+                  const stepX = spark.length > 1 ? 100 / (spark.length - 1) : 0;
+                  const pts = spark.map((v, i) => ({
+                    x: i * stepX,
+                    y: 30 - ((v - min) / range) * 26 - 2,
+                  }));
+                  const line = pts.map((p, i) => `${i === 0 ? 'M' : 'L'}${p.x},${p.y}`).join(' ');
+                  const fill = `${line} L100,30 L0,30 Z`;
+                  return (
+                    <>
+                      <path d={fill} fill="url(#hero-net-fill)" />
+                      <path d={line} fill="none" stroke="rgba(255,255,255,0.9)" strokeWidth="1.4" vectorEffect="non-scaling-stroke" strokeLinecap="round" strokeLinejoin="round" />
+                    </>
+                  );
+                })()}
+              </svg>
+            </div>
+          )}
+        </CardContent>
       </Card>
     </motion.div>
   );
@@ -777,25 +773,14 @@ function StatCard({ label, value, tone, icon: Icon, subtitle = 'This month', spa
       className="group h-full"
     >
       <Card className="relative overflow-hidden h-full card-lift">
-        <CardContent className="p-5 flex flex-col gap-3 h-full">
-          <div className="flex items-start justify-between gap-3">
-            <div className="min-w-0">
-              <CardDescription className="text-[10px] uppercase tracking-wider mb-1.5">
-                {label}
-              </CardDescription>
-              <div
-                className={cn(
-                  'num-display text-2xl xl:text-3xl font-semibold tracking-tight truncate',
-                  tone === 'gain' && 'text-[hsl(var(--gain))]',
-                  tone === 'loss' && 'text-[hsl(var(--loss))]'
-                )}
-              >
-                {formatted}
-              </div>
-            </div>
+        <CardContent className="p-5 flex flex-col gap-2.5 h-full">
+          <div className="flex items-start justify-between gap-2">
+            <CardDescription className="text-[10px] uppercase tracking-wider">
+              {label}
+            </CardDescription>
             <div
               className={cn(
-                'h-9 w-9 rounded-lg grid place-items-center flex-shrink-0',
+                'h-8 w-8 rounded-lg grid place-items-center flex-shrink-0',
                 tone === 'gain'
                   ? 'bg-[hsl(var(--gain))]/12 text-[hsl(var(--gain))]'
                   : tone === 'loss'
@@ -807,14 +792,24 @@ function StatCard({ label, value, tone, icon: Icon, subtitle = 'This month', spa
             </div>
           </div>
 
+          <div
+            className={cn(
+              'num-display text-2xl xl:text-3xl font-semibold tracking-tight leading-tight truncate',
+              tone === 'gain' && 'text-[hsl(var(--gain))]',
+              tone === 'loss' && 'text-[hsl(var(--loss))]'
+            )}
+          >
+            {formatted}
+          </div>
+
           <div className="flex items-end justify-between gap-3 mt-auto">
-            <p className="text-xs text-muted-foreground">{subtitle}</p>
+            <p className="text-[11px] text-muted-foreground">{subtitle}</p>
             {spark.length > 1 && (
               <Sparkline
                 values={spark}
                 tone={tone}
-                width={88}
-                height={28}
+                width={72}
+                height={24}
                 strokeWidth={1.5}
                 className="opacity-90"
               />
