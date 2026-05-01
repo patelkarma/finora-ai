@@ -7,7 +7,6 @@ import { AuthContext } from '../../context/AuthContext';
 import { AuthSplitLayout } from '../../components/auth-split-layout';
 import { AuthMessage } from '../../components/auth-message';
 import { Button } from '../../components/ui/button';
-import { Input } from '../../components/ui/input';
 import { Label } from '../../components/ui/label';
 
 const Login = () => {
@@ -62,12 +61,14 @@ const Login = () => {
       <form onSubmit={handlePasswordLogin} className="space-y-5">
         <div className="space-y-2">
           <Label htmlFor="email">Email</Label>
-          {/* Inputs get a leading icon for visual structure — matches
-              the polished feel of the brand panel without changing
-              the underlying Input primitive. */}
-          <div className="relative">
-            <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/70 pointer-events-none" />
-            <Input
+          {/* Flex-row wrapper acts as the visible field — the input
+              loses its own border / background and just slots into
+              the row. This eliminates the absolute-positioned-icon
+              pattern entirely, so there is no padding-override
+              math that can get clobbered by Tailwind class merging. */}
+          <div className="flex items-center gap-2.5 h-11 rounded-md border border-input bg-background/80 px-3.5 transition-[box-shadow,border-color] focus-within:border-ring focus-within:bg-background focus-within:shadow-[0_0_0_4px_hsl(var(--ring)/0.18)]">
+            <Mail className="h-4 w-4 text-muted-foreground/70 flex-shrink-0" />
+            <input
               id="email"
               type="email"
               required
@@ -75,7 +76,7 @@ const Login = () => {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="you@example.com"
-              className="pl-10 h-11"
+              className="flex-1 min-w-0 bg-transparent text-sm text-foreground placeholder:text-muted-foreground focus:outline-none"
             />
           </div>
         </div>
@@ -90,9 +91,9 @@ const Login = () => {
               Forgot password?
             </Link>
           </div>
-          <div className="relative">
-            <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/70 pointer-events-none" />
-            <Input
+          <div className="flex items-center gap-2.5 h-11 rounded-md border border-input bg-background/80 px-3.5 transition-[box-shadow,border-color] focus-within:border-ring focus-within:bg-background focus-within:shadow-[0_0_0_4px_hsl(var(--ring)/0.18)]">
+            <Lock className="h-4 w-4 text-muted-foreground/70 flex-shrink-0" />
+            <input
               id="password"
               type="password"
               required
@@ -100,7 +101,7 @@ const Login = () => {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="••••••••"
-              className="pl-10 h-11"
+              className="flex-1 min-w-0 bg-transparent text-sm text-foreground placeholder:text-muted-foreground focus:outline-none"
             />
           </div>
         </div>

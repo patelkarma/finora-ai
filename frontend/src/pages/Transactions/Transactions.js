@@ -311,14 +311,14 @@ const Transactions = () => {
       {/* Filter bar */}
       <Card className="mb-6">
         <CardContent className="p-4 flex flex-col sm:flex-row gap-3">
-          <div className="relative flex-1">
-            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/70 pointer-events-none" />
-            <Input
+          <div className="flex-1 flex items-center gap-2.5 h-10 rounded-md border border-input bg-background/80 px-3.5 transition-[box-shadow,border-color] focus-within:border-ring focus-within:bg-background focus-within:shadow-[0_0_0_4px_hsl(var(--ring)/0.18)]">
+            <Search className="h-4 w-4 text-muted-foreground/70 flex-shrink-0" />
+            <input
               type="search"
               placeholder="Search description or category…"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="pl-10"
+              className="flex-1 min-w-0 bg-transparent text-sm text-foreground placeholder:text-muted-foreground focus:outline-none"
             />
           </div>
           <div className="flex gap-1 p-1 rounded-md bg-zinc-100 dark:bg-zinc-900">
