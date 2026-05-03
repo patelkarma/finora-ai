@@ -14,7 +14,7 @@
 
 [![Backend CI](https://img.shields.io/github/actions/workflow/status/patelkarma/finora-ai/backend-ci.yml?branch=main&label=backend%20CI&style=flat-square&logo=githubactions&logoColor=white)](https://github.com/patelkarma/finora-ai/actions/workflows/backend-ci.yml)
 [![Frontend CI](https://img.shields.io/github/actions/workflow/status/patelkarma/finora-ai/frontend-ci.yml?branch=main&label=frontend%20CI&style=flat-square&logo=githubactions&logoColor=white)](https://github.com/patelkarma/finora-ai/actions/workflows/frontend-ci.yml)
-[![Tests](https://img.shields.io/badge/tests-75_backend_+_12_frontend-22c55e?style=flat-square&logo=junit5&logoColor=white)](https://github.com/patelkarma/finora-ai/actions)
+[![Tests](https://img.shields.io/badge/tests-76_backend_+_12_frontend-22c55e?style=flat-square&logo=junit5&logoColor=white)](https://github.com/patelkarma/finora-ai/actions)
 ![Java](https://img.shields.io/badge/Java-17-007396?style=flat-square&logo=openjdk&logoColor=white)
 ![Spring Boot](https://img.shields.io/badge/Spring_Boot-3.5-6DB33F?style=flat-square&logo=spring&logoColor=white)
 ![Postgres](https://img.shields.io/badge/Postgres-15_+_pgvector-336791?style=flat-square&logo=postgresql&logoColor=white)
@@ -284,6 +284,23 @@ sequenceDiagram
     API-->>U: 200 { id, message, createdAt, ... }
 ```
 </details>
+
+---
+
+## Observability
+
+If RAG indexing fell behind, I'd know within minutes — `/actuator/prometheus` exposes Finora-specific counters alongside the JVM/HTTP defaults. A scraper (Grafana Cloud free tier works) graphs them directly.
+
+| Metric | What it tells you |
+|---|---|
+| `finora_transactions_created_total` | Total writes — single + bulk paths combined. Sudden flatline = the write API is broken. |
+| `finora_transactions_imported_total` | Subset of the above coming from CSV bulk-import. Spike = someone just imported a year of data. |
+| `finora_chat_requests_total{provider, mode}` | Tagged by `gemini` vs `ollama` and `sync` vs `stream` — shows real provider mix, not what you think it is. |
+| `finora_ratelimit_rejected_total{rule}` | One series per Bucket4j rule. A spike on `auth.login` = brute-force; on `transactions.import` = misbehaving client. |
+| `http_server_requests_seconds` (default) | Latency p50/p95/p99 per endpoint — sourced from Spring Boot, no extra wiring. |
+| `jvm_memory_used_bytes` (default) | Heap pressure on the Render free tier. |
+
+Wired in `TransactionService`, `RateLimitInterceptor`, and `ChatService` constructors via `MeterRegistry`. Locked in with [`ActuatorPrometheusTest`](backend/src/test/java/com/project/financeDashboard/ActuatorPrometheusTest.java) so a recruiter cloning the repo can see the wiring is real, not aspirational.
 
 ---
 

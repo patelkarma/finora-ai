@@ -6,6 +6,7 @@ import com.project.financeDashboard.model.User;
 import com.project.financeDashboard.service.llm.LlmService;
 import com.project.financeDashboard.service.rag.RagService;
 import com.project.financeDashboard.service.rag.TransactionEmbeddingDao.RelevantTransaction;
+import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -60,7 +61,7 @@ class ChatServiceTest {
         LlmService llm = mock(LlmService.class);
         TransactionService txs = mock(TransactionService.class);
         BudgetService budgets = mock(BudgetService.class);
-        ChatService chat = new ChatService(llm, txs, budgets, /* rag */ null);
+        ChatService chat = new ChatService(llm, txs, budgets, /* rag */ null, new SimpleMeterRegistry());
 
         when(txs.getTransactionsByUserId(1L)).thenReturn(List.of(
                 expense("Pizza", "450", "Food", LocalDate.now().minusDays(2))
@@ -89,7 +90,7 @@ class ChatServiceTest {
         TransactionService txs = mock(TransactionService.class);
         BudgetService budgets = mock(BudgetService.class);
         RagService rag = mock(RagService.class);
-        ChatService chat = new ChatService(llm, txs, budgets, rag);
+        ChatService chat = new ChatService(llm, txs, budgets, rag, new SimpleMeterRegistry());
 
         // RAG returns one match — its presence should suppress the
         // recent-N fallback block.
@@ -118,7 +119,7 @@ class ChatServiceTest {
         TransactionService txs = mock(TransactionService.class);
         BudgetService budgets = mock(BudgetService.class);
         RagService rag = mock(RagService.class);
-        ChatService chat = new ChatService(llm, txs, budgets, rag);
+        ChatService chat = new ChatService(llm, txs, budgets, rag, new SimpleMeterRegistry());
 
         // RAG present but returns empty (new user, no embeddings yet).
         // Service must fall back to the recent-N block.
@@ -145,7 +146,7 @@ class ChatServiceTest {
         LlmService llm = mock(LlmService.class);
         TransactionService txs = mock(TransactionService.class);
         BudgetService budgets = mock(BudgetService.class);
-        ChatService chat = new ChatService(llm, txs, budgets, null);
+        ChatService chat = new ChatService(llm, txs, budgets, null, new SimpleMeterRegistry());
 
         when(txs.getTransactionsByUserId(1L)).thenReturn(List.of());
         when(budgets.getBudgetsByUserId(1L)).thenReturn(List.of());
@@ -176,7 +177,7 @@ class ChatServiceTest {
         LlmService llm = mock(LlmService.class);
         TransactionService txs = mock(TransactionService.class);
         BudgetService budgets = mock(BudgetService.class);
-        ChatService chat = new ChatService(llm, txs, budgets, null);
+        ChatService chat = new ChatService(llm, txs, budgets, null, new SimpleMeterRegistry());
 
         when(txs.getTransactionsByUserId(1L)).thenReturn(List.of());
         when(budgets.getBudgetsByUserId(1L)).thenReturn(List.of());

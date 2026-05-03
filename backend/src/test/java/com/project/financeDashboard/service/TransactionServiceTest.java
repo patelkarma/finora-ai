@@ -4,10 +4,11 @@ import com.project.financeDashboard.event.TransactionSavedEvent;
 import com.project.financeDashboard.model.Transaction;
 import com.project.financeDashboard.model.User;
 import com.project.financeDashboard.repository.TransactionRepository;
+import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.context.ApplicationEventPublisher;
@@ -25,7 +26,14 @@ class TransactionServiceTest {
 
     @Mock TransactionRepository transactionRepository;
     @Mock ApplicationEventPublisher events;
-    @InjectMocks TransactionService transactionService;
+    TransactionService transactionService;
+
+    @BeforeEach
+    void setUp() {
+        // Real SimpleMeterRegistry instead of a mock — a mocked MeterRegistry
+        // returns null Counters from the builder and the constructor would NPE.
+        transactionService = new TransactionService(transactionRepository, events, new SimpleMeterRegistry());
+    }
 
     @Test
     void getTransactionsByUserId_delegates_to_repository() {

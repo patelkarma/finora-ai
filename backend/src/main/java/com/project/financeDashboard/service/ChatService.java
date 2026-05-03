@@ -7,6 +7,7 @@ import com.project.financeDashboard.model.User;
 import com.project.financeDashboard.service.llm.LlmService;
 import com.project.financeDashboard.service.rag.RagService;
 import com.project.financeDashboard.service.rag.TransactionEmbeddingDao.RelevantTransaction;
+import io.micrometer.core.instrument.MeterRegistry;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -36,19 +37,23 @@ public class ChatService {
     private final BudgetService budgetService;
     /** Optional — null when {@code rag.enabled=false}. */
     private final RagService ragService;
+    private final MeterRegistry meterRegistry;
 
     public ChatService(LlmService llmService,
                        TransactionService transactionService,
                        BudgetService budgetService,
-                       @Autowired(required = false) RagService ragService) {
+                       @Autowired(required = false) RagService ragService,
+                       MeterRegistry meterRegistry) {
         this.llmService = llmService;
         this.transactionService = transactionService;
         this.budgetService = budgetService;
         this.ragService = ragService;
+        this.meterRegistry = meterRegistry;
     }
 
     public String reply(User user, List<ChatMessage> history, String message) {
         String prompt = buildPrompt(user, history, message);
+        recordChatRequest("sync");
         return llmService.generate(prompt);
     }
 
@@ -60,7 +65,21 @@ public class ChatService {
      */
     public void replyStream(User user, List<ChatMessage> history, String message, Consumer<String> onChunk) {
         String prompt = buildPrompt(user, history, message);
+        recordChatRequest("stream");
         llmService.generateStream(prompt, onChunk);
+    }
+
+    /**
+     * Tag chat requests by mode (sync vs stream) and provider (gemini vs
+     * ollama) so the Grafana dashboard can show e.g. "% of chat traffic
+     * served by Gemini" vs the local fallback.
+     */
+    private void recordChatRequest(String mode) {
+        String provider = llmService.activeProviderName();
+        meterRegistry.counter("finora.chat.requests",
+                "mode", mode,
+                "provider", provider != null ? provider : "unknown")
+                .increment();
     }
 
     private String buildPrompt(User user, List<ChatMessage> history, String message) {

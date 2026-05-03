@@ -132,6 +132,15 @@
     		<artifactId>spring-boot-starter-actuator</artifactId>
 		</dependency>
 
+		<!-- Prometheus scrape format on /actuator/prometheus.
+		     Custom counters in TransactionService, ChatService, and the
+		     rate-limit interceptor surface here so a Grafana dashboard can
+		     show "transactions/min" or "ratelimit rejections" out of the box. -->
+		<dependency>
+    		<groupId>io.micrometer</groupId>
+    		<artifactId>micrometer-registry-prometheus</artifactId>
+		</dependency>
+
 		<!-- Redis cache (Spring Cache abstraction backed by Redis Cloud free tier) -->
 		<dependency>
     		<groupId>org.springframework.boot</groupId>

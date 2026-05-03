@@ -1,5 +1,6 @@
 package com.project.financeDashboard.config;
 
+import io.micrometer.core.instrument.MeterRegistry;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
@@ -28,32 +29,38 @@ import java.time.Duration;
 @Configuration
 public class RateLimitConfig implements WebMvcConfigurer {
 
+    private final MeterRegistry meterRegistry;
+
+    public RateLimitConfig(MeterRegistry meterRegistry) {
+        this.meterRegistry = meterRegistry;
+    }
+
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
         // Auth — IP-scoped
-        registry.addInterceptor(new RateLimitInterceptor(
+        registry.addInterceptor(interceptor(
                         RateLimitRule.perIp("auth.request-otp", 5, Duration.ofHours(1))))
                 .addPathPatterns("/api/auth/request-otp");
 
-        registry.addInterceptor(new RateLimitInterceptor(
+        registry.addInterceptor(interceptor(
                         RateLimitRule.perIp("auth.verify-otp", 10, Duration.ofMinutes(15))))
                 .addPathPatterns("/api/auth/verify-otp");
 
-        registry.addInterceptor(new RateLimitInterceptor(
+        registry.addInterceptor(interceptor(
                         RateLimitRule.perIp("auth.login", 10, Duration.ofMinutes(15))))
                 .addPathPatterns("/api/auth/login");
 
-        registry.addInterceptor(new RateLimitInterceptor(
+        registry.addInterceptor(interceptor(
                         RateLimitRule.perIp("auth.signup", 5, Duration.ofHours(1))))
                 .addPathPatterns("/api/auth/signup");
 
-        registry.addInterceptor(new RateLimitInterceptor(
+        registry.addInterceptor(interceptor(
                         RateLimitRule.perIp("auth.forgot-password", 5, Duration.ofHours(1))))
                 .addPathPatterns("/api/auth/forgot-password");
 
         // LLM — user-scoped (authenticated). Falls back to IP for any
         // unauthenticated edge case so an anonymous flood is still capped.
-        registry.addInterceptor(new RateLimitInterceptor(
+        registry.addInterceptor(interceptor(
                         RateLimitRule.perUser("ai.insights.generate", 20, Duration.ofHours(1))))
                 .addPathPatterns("/api/ai/insights/generate");
 
@@ -62,7 +69,7 @@ public class RateLimitConfig implements WebMvcConfigurer {
         // client that holds Enter. Both the synchronous endpoint and
         // the SSE streaming endpoint share the same bucket — sending
         // is sending, regardless of how the response is delivered.
-        registry.addInterceptor(new RateLimitInterceptor(
+        registry.addInterceptor(interceptor(
                         RateLimitRule.perUser("ai.chat", 60, Duration.ofHours(1))))
                 .addPathPatterns("/api/ai/chat", "/api/ai/chat/stream");
 
@@ -70,7 +77,7 @@ public class RateLimitConfig implements WebMvcConfigurer {
         // embed calls per invocation. 5 / hour / USER is plenty for the
         // legitimate "I added new transactions, re-index me" case while
         // capping any tight retry loop.
-        registry.addInterceptor(new RateLimitInterceptor(
+        registry.addInterceptor(interceptor(
                         RateLimitRule.perUser("ai.rag.backfill", 5, Duration.ofHours(1))))
                 .addPathPatterns("/api/ai/rag/backfill");
 
@@ -78,8 +85,12 @@ public class RateLimitConfig implements WebMvcConfigurer {
         // rows + 1000 async embed jobs. 10 / hour / USER covers the
         // "redo the import with a fixed file" loop without letting a
         // bad script pour through the Gemini quota.
-        registry.addInterceptor(new RateLimitInterceptor(
+        registry.addInterceptor(interceptor(
                         RateLimitRule.perUser("transactions.import", 10, Duration.ofHours(1))))
                 .addPathPatterns("/api/transactions/user/*/import");
+    }
+
+    private RateLimitInterceptor interceptor(RateLimitRule rule) {
+        return new RateLimitInterceptor(rule, meterRegistry);
     }
 }

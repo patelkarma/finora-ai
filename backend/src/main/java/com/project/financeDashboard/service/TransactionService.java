@@ -5,6 +5,8 @@ import com.project.financeDashboard.event.TransactionSavedEvent;
 import com.project.financeDashboard.model.Transaction;
 import com.project.financeDashboard.model.User;
 import com.project.financeDashboard.repository.TransactionRepository;
+import io.micrometer.core.instrument.Counter;
+import io.micrometer.core.instrument.MeterRegistry;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.cache.annotation.Caching;
@@ -33,11 +35,20 @@ public class TransactionService {
 
     private final TransactionRepository transactionRepository;
     private final ApplicationEventPublisher events;
+    private final Counter transactionsCreated;
+    private final Counter transactionsImported;
 
     public TransactionService(TransactionRepository transactionRepository,
-                              ApplicationEventPublisher events) {
+                              ApplicationEventPublisher events,
+                              MeterRegistry meterRegistry) {
         this.transactionRepository = transactionRepository;
         this.events = events;
+        this.transactionsCreated = Counter.builder("finora.transactions.created")
+                .description("Total transactions persisted (single + bulk paths)")
+                .register(meterRegistry);
+        this.transactionsImported = Counter.builder("finora.transactions.imported")
+                .description("Transactions persisted via the CSV bulk-import path")
+                .register(meterRegistry);
     }
 
     @Cacheable(value = RedisCacheConfig.CACHE_TRANSACTIONS, key = "#user.id")
@@ -87,6 +98,7 @@ public class TransactionService {
     public Transaction saveTransaction(@NonNull Transaction transaction) {
         Transaction saved = transactionRepository.save(transaction);
         events.publishEvent(new TransactionSavedEvent(saved));
+        transactionsCreated.increment();
         return saved;
     }
 
@@ -141,6 +153,8 @@ public class TransactionService {
             events.publishEvent(new TransactionSavedEvent(s));
             saved.add(s);
         }
+        transactionsCreated.increment(saved.size());
+        transactionsImported.increment(saved.size());
         return saved;
     }
 }

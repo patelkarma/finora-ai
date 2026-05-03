@@ -5,6 +5,8 @@ import io.github.bucket4j.Bandwidth;
 import io.github.bucket4j.Bucket;
 import io.github.bucket4j.ConsumptionProbe;
 import io.github.bucket4j.Refill;
+import io.micrometer.core.instrument.Counter;
+import io.micrometer.core.instrument.MeterRegistry;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.slf4j.Logger;
@@ -36,9 +38,16 @@ public class RateLimitInterceptor implements HandlerInterceptor {
 
     private final RateLimitRule rule;
     private final Map<String, Bucket> buckets = new ConcurrentHashMap<>();
+    private final Counter rejectionCounter;
 
-    public RateLimitInterceptor(RateLimitRule rule) {
+    public RateLimitInterceptor(RateLimitRule rule, MeterRegistry meterRegistry) {
         this.rule = rule;
+        // One counter shared across the family with a `rule` tag so Grafana
+        // can break out which limiter is firing without a counter explosion.
+        this.rejectionCounter = Counter.builder("finora.ratelimit.rejected")
+                .description("Total rate-limit rejections, tagged by rule")
+                .tag("rule", rule.name())
+                .register(meterRegistry);
     }
 
     @Override
@@ -56,6 +65,7 @@ public class RateLimitInterceptor implements HandlerInterceptor {
         if (retryAfterSeconds < 1) retryAfterSeconds = 1;
 
         log.warn("Rate limit hit: rule={} key={} retryAfter={}s", rule.name(), key, retryAfterSeconds);
+        rejectionCounter.increment();
         throw new RateLimitExceededException(rule.name(), retryAfterSeconds);
     }
 
