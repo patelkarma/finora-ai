@@ -33,6 +33,11 @@ jobs:
         run: npx eslint src/ --max-warnings=0
         continue-on-error: true
 
+      - name: Test
+        run: npm test -- --watchAll=false --passWithNoTests
+        env:
+          CI: "true"
+
       - name: Build
         run: npm run build
         env:

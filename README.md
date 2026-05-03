@@ -12,8 +12,9 @@
 [![API Docs](https://img.shields.io/badge/API-Swagger_UI-3b82f6?style=for-the-badge&logo=openapiinitiative&logoColor=white)](https://finora-backend-rnd0.onrender.com/swagger-ui.html)
 [![Health](https://img.shields.io/badge/Health-actuator/health-22c55e?style=for-the-badge&logo=spring&logoColor=white)](https://finora-backend-rnd0.onrender.com/actuator/health)
 
-[![Backend CI](https://img.shields.io/github/actions/workflow/status/patelkarma/finora-ai/backend-ci.yml?branch=main&label=backend%20CI&style=flat-square)](.github/workflows/backend-ci.yml)
-[![Frontend CI](https://img.shields.io/github/actions/workflow/status/patelkarma/finora-ai/frontend-ci.yml?branch=main&label=frontend%20CI&style=flat-square)](.github/workflows/frontend-ci.yml)
+[![Backend CI](https://img.shields.io/github/actions/workflow/status/patelkarma/finora-ai/backend-ci.yml?branch=main&label=backend%20CI&style=flat-square&logo=githubactions&logoColor=white)](https://github.com/patelkarma/finora-ai/actions/workflows/backend-ci.yml)
+[![Frontend CI](https://img.shields.io/github/actions/workflow/status/patelkarma/finora-ai/frontend-ci.yml?branch=main&label=frontend%20CI&style=flat-square&logo=githubactions&logoColor=white)](https://github.com/patelkarma/finora-ai/actions/workflows/frontend-ci.yml)
+[![Tests](https://img.shields.io/badge/tests-75_backend_+_12_frontend-22c55e?style=flat-square&logo=junit5&logoColor=white)](https://github.com/patelkarma/finora-ai/actions)
 ![Java](https://img.shields.io/badge/Java-17-007396?style=flat-square&logo=openjdk&logoColor=white)
 ![Spring Boot](https://img.shields.io/badge/Spring_Boot-3.5-6DB33F?style=flat-square&logo=spring&logoColor=white)
 ![Postgres](https://img.shields.io/badge/Postgres-15_+_pgvector-336791?style=flat-square&logo=postgresql&logoColor=white)

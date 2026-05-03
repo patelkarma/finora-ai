@@ -107,6 +107,13 @@
 			<scope>test</scope>
 		</dependency>
 
+		<!-- @WithMockUser, SecurityMockMvcRequestPostProcessors, etc. -->
+		<dependency>
+			<groupId>org.springframework.security</groupId>
+			<artifactId>spring-security-test</artifactId>
+			<scope>test</scope>
+		</dependency>
+
 		<!-- Spring Mail -->
 		<dependency>
   			<groupId>org.springframework.boot</groupId>
