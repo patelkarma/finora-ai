@@ -15,7 +15,7 @@
 [![Backend CI](https://img.shields.io/github/actions/workflow/status/patelkarma/finora-ai/backend-ci.yml?branch=main&label=backend%20CI&style=flat-square&logo=githubactions&logoColor=white)](https://github.com/patelkarma/finora-ai/actions/workflows/backend-ci.yml)
 [![Frontend CI](https://img.shields.io/github/actions/workflow/status/patelkarma/finora-ai/frontend-ci.yml?branch=main&label=frontend%20CI&style=flat-square&logo=githubactions&logoColor=white)](https://github.com/patelkarma/finora-ai/actions/workflows/frontend-ci.yml)
 [![Tests](https://img.shields.io/badge/tests-76_backend_+_12_frontend-22c55e?style=flat-square&logo=junit5&logoColor=white)](https://github.com/patelkarma/finora-ai/actions)
-[![Uptime](https://img.shields.io/badge/uptime-monitored-22c55e?style=flat-square&logo=uptimerobot&logoColor=white)](#-no-cold-start-wait)
+[![Uptime](https://img.shields.io/badge/uptime-monitored-22c55e?style=flat-square&logo=uptimerobot&logoColor=white)](https://stats.uptimerobot.com/N3SJzC9uDr)
 ![Java](https://img.shields.io/badge/Java-17-007396?style=flat-square&logo=openjdk&logoColor=white)
 ![Spring Boot](https://img.shields.io/badge/Spring_Boot-3.5-6DB33F?style=flat-square&logo=spring&logoColor=white)
 ![Postgres](https://img.shields.io/badge/Postgres-15_+_pgvector-336791?style=flat-square&logo=postgresql&logoColor=white)
@@ -317,6 +317,8 @@ If RAG indexing fell behind, I'd know within minutes — `/actuator/prometheus` 
 Wired in `TransactionService`, `RateLimitInterceptor`, and `ChatService` constructors via `MeterRegistry`. Locked in with [`ActuatorPrometheusTest`](backend/src/test/java/com/project/financeDashboard/ActuatorPrometheusTest.java) so a recruiter cloning the repo can see the wiring is real, not aspirational.
 
 ### Liveness — UptimeRobot
+
+[Public status page →](https://stats.uptimerobot.com/N3SJzC9uDr)
 
 External synthetic monitor pings `/actuator/health` every 5 minutes. Two jobs:
 
