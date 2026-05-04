@@ -53,7 +53,7 @@ Most "AI finance" apps stop at *"add transaction → see chart"*. Finora goes fu
    appear automatically once there's enough data to compute against
 ```
 
-> 💡 **Want all four AI cards lit up immediately?** Hit `POST /api/admin/seed-demo` (auth required) — it creates 38 realistic transactions over 90 days. See [`DemoSeedController.java`](./backend/src/main/java/com/project/financeDashboard/controller/DemoSeedController.java).
+> 💡 **Want all four AI cards lit up immediately?** Hit `POST /api/admin/seed-demo` (auth required) — it creates ~90 realistic transactions over 90 days, complete with rent, utilities, varied vendor names, and one severe anomaly to flag. See [`DemoSeedController.java`](./backend/src/main/java/com/project/financeDashboard/controller/DemoSeedController.java).
 
 ---
 
@@ -61,20 +61,28 @@ Most "AI finance" apps stop at *"add transaction → see chart"*. Finora goes fu
 
 <table>
   <tr>
-    <td width="50%"><img src="docs/screenshots/dashboard-hero.png" alt="Dashboard hero — net cashflow, income, expenses, AI insight, top spending"/></td>
-    <td width="50%"><img src="docs/screenshots/dashboard-ai-cards.png" alt="Anomalies card flagging unusual spending; 30-day cash-flow forecast line chart; detected subscriptions"/></td>
+    <td width="50%"><img src="docs/screenshots/dashboard-hero.png" alt="Dashboard hero — Hello Karma greeting, period switcher, net cashflow gradient card, income, expenses, AI insight, top spending categories"/></td>
+    <td width="50%"><img src="docs/screenshots/dashboard-ai-cards.png" alt="Unusual spending card flagging two anomalies (one severe ₹15,000 birthday dinner) plus the 30-day projected cash-flow forecast"/></td>
   </tr>
   <tr>
-    <td><b>Hero KPI strip + AI insight</b><br/>Net cashflow / Income / Expenses tiles with animated count-up + sparklines, LLM narrative insight, top categories.</td>
-    <td><b>Anomalies + Forecast + Subscriptions</b><br/>Per-category z-score anomaly detection, 30-day projected balance line, auto-detected recurring expenses.</td>
+    <td><b>Hero KPI strip + AI insight</b><br/>Net cashflow / Income / Expenses tiles with animated count-up + sparklines, LLM narrative insight, top categories — all responsive to the 30D / 90D / 1Y / All time-period switcher.</td>
+    <td><b>Anomalies + Forecast</b><br/>Per-category z-score detector flags the ₹15,000 birthday dinner as SEVERE. Forecast combines salary cadence + recurring subs + discretionary average into one trend line.</td>
   </tr>
   <tr>
-    <td><img src="docs/screenshots/chat-streaming.png" alt="Ask Finora chat page — streaming reply with blinking cursor, RAG indexed badge"/></td>
-    <td><img src="docs/screenshots/transactions.png" alt="Transactions list grouped by date with income/expense filter pill"/></td>
+    <td><img src="docs/screenshots/dashboard-subscriptions.png" alt="Detected subscriptions card listing 4 recurring expenses (Netflix, Spotify, weekly groceries, lunch) with estimated monthly cost ₹11,616.20"/></td>
+    <td><img src="docs/screenshots/chat-streaming.png" alt="Ask Finora chat page — answer to 'What were my 5 most expensive transactions' rendered as a markdown numbered list grounded in real transaction rows, with the RAG-indexed 42/42 badge"/></td>
   </tr>
   <tr>
-    <td><b>Conversational chat</b><br/>SSE streaming replies grounded in real transactions via pgvector. Markdown rendering + copy button + RAG indexing badge.</td>
-    <td><b>Transactions</b><br/>Date-grouped list, animated filter pill, bulk select, CSV import, edit-in-place modal.</td>
+    <td><b>Auto-detected subscriptions</b><br/>Groups transactions by description + amount cluster, locks onto cadence (weekly / monthly / yearly), surfaces the estimated monthly burn — recurring spend you didn't know you had.</td>
+    <td><b>Conversational chat</b><br/>SSE streaming replies grounded in real transactions via pgvector RAG. Markdown rendering, copy button, "42/42 indexed" status — proves the LLM is actually reading your data.</td>
+  </tr>
+  <tr>
+    <td><img src="docs/screenshots/transactions.png" alt="Transactions list grouped by date with the income/expense filter pill and one row selected showing the floating bulk-action bar"/></td>
+    <td><img src="docs/screenshots/auth-login.png" alt="Login page split layout — left brand panel with the gradient + product preview card showing +₹48,000 net cashflow + GDPR/Encrypted/Real-time trust pills; right form panel with email, password, Google OAuth"/></td>
+  </tr>
+  <tr>
+    <td><b>Transactions</b><br/>Date-grouped list, animated filter pill (All / Income / Expense), bulk select with indeterminate state, CSV import with preview, edit-in-place modal.</td>
+    <td><b>Auth that doesn't look generic</b><br/>Split layout with a real product preview card on the brand side instead of the usual "logo on a gradient" template. Email + password (BCrypt + brute-force lockout), Google OAuth, OTP verification.</td>
   </tr>
 </table>
 
