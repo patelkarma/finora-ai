@@ -259,7 +259,7 @@ sequenceDiagram
     API->>SMTP: send 6-digit code
     API-->>U: 200 { resendCooldownSeconds: 15 }
     U->>API: POST /api/auth/verify-otp { email, code }
-    API->>DB: SELECT latest otp; check expiry & match
+    API->>DB: SELECT latest otp — check expiry and match
     API->>DB: UPDATE users SET verified=true
     API-->>U: 200 { message: "Email verified" }
     U->>API: POST /api/auth/signup { name, email, password }
