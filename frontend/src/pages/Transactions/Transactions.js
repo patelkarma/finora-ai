@@ -12,6 +12,7 @@ import {
   Upload,
   CheckSquare,
   Square,
+  MinusSquare,
 } from 'lucide-react';
 import transactionService from '../../services/transactionService';
 import { AppLayout } from '../../components/app-layout';
@@ -380,7 +381,10 @@ const Transactions = () => {
               {allFilteredSelected ? (
                 <CheckSquare className="h-3.5 w-3.5 text-primary" />
               ) : someFilteredSelected ? (
-                <CheckSquare className="h-3.5 w-3.5 text-primary opacity-60" />
+                // Standard indeterminate state — distinct from "all selected"
+                // so a single-row select doesn't visually look like "everything
+                // is checked." Matches HTML <input> indeterminate behaviour.
+                <MinusSquare className="h-3.5 w-3.5 text-primary" />
               ) : (
                 <Square className="h-3.5 w-3.5" />
               )}
@@ -414,7 +418,11 @@ const Transactions = () => {
                           'h-5 w-5 rounded grid place-items-center flex-shrink-0 transition-colors',
                           selected.has(t.id)
                             ? 'text-primary'
-                            : 'text-zinc-400 dark:text-zinc-600 opacity-0 group-hover:opacity-100',
+                            // Faintly visible by default so users discover the
+                            // bulk-select affordance without hovering. Pop to
+                            // full opacity on hover and once anything is
+                            // selected (so the rest of the rows look "selectable").
+                            : 'text-zinc-400 dark:text-zinc-600 opacity-40 group-hover:opacity-100',
                           selected.size > 0 && 'opacity-100'
                         )}
                         aria-label={selected.has(t.id) ? 'Deselect' : 'Select'}
