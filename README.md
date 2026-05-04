@@ -254,7 +254,8 @@ sequenceDiagram
     participant SMTP as Gmail SMTP
 
     U->>API: POST /api/auth/request-otp { email }
-    API->>DB: deleteByEmail; INSERT otp_codes (code, expires_at = now+5m)
+    API->>DB: deleteByEmail then INSERT otp_codes
+    Note over API,DB: code + expires_at = now + 5m
     API->>SMTP: send 6-digit code
     API-->>U: 200 { resendCooldownSeconds: 15 }
     U->>API: POST /api/auth/verify-otp { email, code }
