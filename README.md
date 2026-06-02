@@ -15,7 +15,6 @@
 [![Backend CI](https://img.shields.io/github/actions/workflow/status/patelkarma/finora-ai/backend-ci.yml?branch=main&label=backend%20CI&style=flat-square&logo=githubactions&logoColor=white)](https://github.com/patelkarma/finora-ai/actions/workflows/backend-ci.yml)
 [![Frontend CI](https://img.shields.io/github/actions/workflow/status/patelkarma/finora-ai/frontend-ci.yml?branch=main&label=frontend%20CI&style=flat-square&logo=githubactions&logoColor=white)](https://github.com/patelkarma/finora-ai/actions/workflows/frontend-ci.yml)
 [![Tests](https://img.shields.io/badge/tests-76_backend_+_12_frontend-22c55e?style=flat-square&logo=junit5&logoColor=white)](https://github.com/patelkarma/finora-ai/actions)
-[![Uptime](https://img.shields.io/badge/uptime-monitored-22c55e?style=flat-square&logo=uptimerobot&logoColor=white)](https://stats.uptimerobot.com/N3SJzC9uDr)
 ![Java](https://img.shields.io/badge/Java-17-007396?style=flat-square&logo=openjdk&logoColor=white)
 ![Spring Boot](https://img.shields.io/badge/Spring_Boot-3.5-6DB33F?style=flat-square&logo=spring&logoColor=white)
 ![Postgres](https://img.shields.io/badge/Postgres-15_+_pgvector-336791?style=flat-square&logo=postgresql&logoColor=white)
@@ -56,9 +55,9 @@ Most "AI finance" apps stop at *"add transaction → see chart"*. Finora goes fu
 
 > 💡 **Want all four AI cards lit up immediately?** Hit `POST /api/admin/seed-demo` (auth required) — it creates ~90 realistic transactions over 90 days, complete with rent, utilities, varied vendor names, and one severe anomaly to flag. See [`DemoSeedController.java`](./backend/src/main/java/com/project/financeDashboard/controller/DemoSeedController.java).
 
-<a id="-no-cold-start-wait"></a>
+<a id="-cold-start"></a>
 
-> ⚡ **No cold-start wait.** Render's free tier sleeps after 15 minutes idle (cold start = 30-60s pain on the first request). UptimeRobot pings `/actuator/health` every 5 minutes, so the dyno never goes to sleep — the live demo opens instantly, not after a coffee. Health probes for Rabbit / Redis are gated on `MESSAGING_ENABLED` / `REDIS_HEALTH_ENABLED` env flags so an unconfigured optional broker doesn't drag overall status to DOWN.
+> ⏳ **First load may take 30-60s.** Render's free tier sleeps after 15 minutes idle, so the first request after a lull wakes the backend before responding; after that it's instant. An always-on dyno removes this, but a portfolio demo doesn't justify the cost. Health probes for Rabbit / Redis are gated on `MESSAGING_ENABLED` / `REDIS_HEALTH_ENABLED` env flags so an unconfigured optional broker doesn't drag overall status to DOWN.
 
 ---
 
@@ -316,16 +315,11 @@ If RAG indexing fell behind, I'd know within minutes — `/actuator/prometheus` 
 
 Wired in `TransactionService`, `RateLimitInterceptor`, and `ChatService` constructors via `MeterRegistry`. Locked in with [`ActuatorPrometheusTest`](backend/src/test/java/com/project/financeDashboard/ActuatorPrometheusTest.java) so a recruiter cloning the repo can see the wiring is real, not aspirational.
 
-### Liveness — UptimeRobot
+### Liveness — health endpoint
 
-[Public status page →](https://stats.uptimerobot.com/N3SJzC9uDr)
+`/actuator/health` is curated: Mail / Rabbit / Redis indicators are gated on env flags so an optional broker that isn't configured can't drag overall status to DOWN. The probe only flips red when something on the *actual request path* (JVM, DataSource, disk) breaks — so a monitor can tell "an optional dependency is unconfigured" from "the app is actually down."
 
-External synthetic monitor pings `/actuator/health` every 5 minutes. Two jobs:
-
-- **Detect outages** before users do — the second the health endpoint flips to DOWN, an email lands in the inbox with the failure detail and timestamp.
-- **Keep the Render free tier warm** — Render sleeps a service after 15 minutes idle (cold start = 30-60s on the next request). 5-min pings hold the dyno open so the live demo opens instantly.
-
-The health endpoint is curated: Mail / Rabbit / Redis indicators are gated on env flags so an optional broker that isn't configured can't drag overall status to DOWN. The probe only flips red when something on the *actual request path* (JVM, DataSource, disk) breaks.
+An always-on dyno or an external uptime monitor could ping this to avoid the free-tier cold start, but neither is wired up for this portfolio build — the cold start is left as an honest, documented tradeoff rather than masked by a mitigation that isn't reliably running.
 
 ---
 
